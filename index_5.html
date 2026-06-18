@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard iFood — Drogarias Venâncio</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+:root {
+  --bg:#0d0f14; --surface:#14171f; --surface2:#1c2030; --border:#252a38;
+  --accent:#ff3e6c; --accent2:#ff8c42; --green:#00d9a0; --yellow:#ffd60a;
+  --blue:#4a90f5; --text:#e8eaf0; --text2:#8890a8; --text3:#4a5068;
+  --red:#ff4757; --font:'Space Grotesk',sans-serif; --mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#0d0f14 0%,#1a0a20 50%,#0d1420 100%);border-bottom:1px solid var(--border);padding:20px 28px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;backdrop-filter:blur(10px);}
+.logo{width:44px;height:44px;background:var(--accent);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.header h1{font-size:17px;font-weight:600;}
+.header p{font-size:12px;color:var(--text2);margin-top:2px;}
+.header-right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+/* FILTER BAR */
+.filter-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 28px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.filter-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;flex-shrink:0;}
+.filter-chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer;transition:all .2s;white-space:nowrap;}
+.filter-chip:hover{border-color:var(--blue);color:var(--text);}
+.filter-chip.active{background:var(--blue);border-color:var(--blue);color:white;}
+.filter-divider{width:1px;height:20px;background:var(--border);margin:0 4px;}
+
+/* NAV */
+.nav-tabs{display:flex;gap:2px;padding:14px 28px 0;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
+.tab{padding:10px 18px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+/* CONTENT */
+.content{padding:22px 28px;max-width:1600px;}
+.section{display:none;}
+.section.active{display:block;}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden;transition:transform .2s;}
+.kpi:hover{transform:translateY(-2px);}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi.sla::before{background:var(--blue);}
+.kpi.nsu::before{background:var(--green);}
+.kpi.ruptura::before{background:var(--yellow);}
+.kpi.cancel::before{background:var(--accent);}
+.kpi.atraso::before{background:var(--accent2);}
+.kpi.tempo::before{background:#a78bfa;}
+.kpi.pedidos::before{background:#64748b;}
+.kpi-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;}
+.kpi-value{font-size:26px;font-weight:700;font-family:var(--mono);}
+.kpi-sub{font-size:10px;color:var(--text3);margin-top:3px;}
+.kpi-delta{font-size:11px;margin-top:5px;font-weight:500;}
+.up{color:var(--green);}
+.down{color:var(--red);}
+
+/* BENCH */
+.bench-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:24px;}
+.bench-chart{display:flex;gap:12px;margin-top:16px;overflow-x:auto;}
+.bench-week{flex:1;min-width:150px;background:var(--surface2);border-radius:10px;padding:14px;}
+.bench-week-label{font-size:11px;color:var(--text2);margin-bottom:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bench-metric{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.bench-metric-name{font-size:11px;color:var(--text2);}
+.bench-metric-val{font-family:var(--mono);font-size:12px;font-weight:600;}
+
+/* SEC HEADER */
+.sec-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.sec-header h2{font-size:15px;font-weight:600;}
+.chip{padding:3px 10px;background:var(--surface2);border-radius:20px;font-size:11px;color:var(--text2);}
+.sec-divider{height:1px;background:var(--border);margin:28px 0;}
+
+/* TOP GRIDS */
+.top-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:24px;}
+.top-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.top-card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.top-card-header .icon{font-size:18px;}
+.top-card-header h3{font-size:13px;font-weight:600;}
+.top-card-header .subtitle{font-size:11px;color:var(--text2);margin-top:1px;}
+.top-item{display:flex;align-items:center;padding:10px 18px;border-bottom:1px solid var(--border);}
+.top-item:last-child{border-bottom:none;}
+.top-rank{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;margin-right:10px;flex-shrink:0;}
+.top-store{flex:1;min-width:0;}
+.top-store-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.top-store-city{font-size:10px;color:var(--text2);margin-top:1px;}
+.top-val{font-family:var(--mono);font-size:13px;font-weight:600;margin-left:10px;flex-shrink:0;}
+
+/* TABLE */
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.table-controls{display:flex;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;}
+.search-box{flex:1;min-width:180px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 12px;color:var(--text);font-size:13px;font-family:var(--font);outline:none;}
+.search-box:focus{border-color:var(--accent);}
+.search-box::placeholder{color:var(--text3);}
+.sort-btn{padding:7px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:11px;cursor:pointer;font-family:var(--font);transition:all .2s;white-space:nowrap;}
+.sort-btn.active,.sort-btn:hover{background:var(--accent);border-color:var(--accent);color:white;}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:10px 12px;text-align:left;font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--surface2);}
+td{padding:10px 12px;font-size:12px;}
+.td-store{font-weight:500;max-width:200px;}
+.td-store small{display:block;font-size:10px;color:var(--text2);margin-top:1px;font-weight:400;}
+.td-regional{display:inline-flex;align-items:center;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;white-space:nowrap;}
+.bar-cell{display:flex;align-items:center;gap:6px;}
+.bar{height:4px;border-radius:2px;flex-shrink:0;}
+.pct{font-family:var(--mono);font-size:12px;white-space:nowrap;}
+.spark{display:inline-flex;align-items:flex-end;gap:2px;height:22px;}
+.spark-bar{width:5px;border-radius:2px 2px 0 0;}
+.trend-up{color:var(--green);}
+.trend-down{color:var(--red);}
+.trend-flat{color:var(--text3);}
+.score-badge{display:inline-flex;align-items:center;justify-content:center;width:40px;height:20px;border-radius:6px;font-size:10px;font-weight:700;font-family:var(--mono);}
+.score-high{background:rgba(255,71,87,.15);color:var(--red);}
+.score-med{background:rgba(255,214,10,.12);color:var(--yellow);}
+.score-low{background:rgba(0,217,160,.12);color:var(--green);}
+
+/* PAGINATION */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;border-top:1px solid var(--border);}
+.page-info{font-size:11px;color:var(--text2);}
+.page-btns{display:flex;gap:6px;}
+.page-btn{padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:11px;color:var(--text2);font-family:var(--font);transition:all .2s;}
+.page-btn:hover,.page-btn.active{background:var(--accent);border-color:var(--accent);color:white;}
+.page-btn:disabled{opacity:.3;cursor:default;}
+
+/* TREND ITEMS */
+.trend-item{display:flex;align-items:center;padding:9px 16px;border-bottom:1px solid var(--border);}
+.trend-item:last-child{border-bottom:none;}
+.trend-delta{font-family:var(--mono);font-size:12px;font-weight:600;width:58px;flex-shrink:0;}
+.trend-info{flex:1;min-width:0;}
+.trend-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.trend-sla{font-size:10px;color:var(--text2);margin-top:2px;}
+
+/* MODAL */
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+.modal-backdrop.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:24px;width:90vw;max-width:720px;max-height:88vh;overflow-y:auto;}
+.modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.modal-title{font-size:16px;font-weight:700;}
+.modal-sub{font-size:12px;color:var(--text2);margin-top:3px;}
+.modal-close{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 12px;cursor:pointer;font-family:var(--font);font-size:12px;}
+.modal-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:20px;}
+.modal-kpi{background:var(--surface2);border-radius:10px;padding:12px;}
+.modal-kpi-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+.modal-kpi-val{font-size:20px;font-weight:700;font-family:var(--mono);}
+
+@media(max-width:768px){.header{padding:14px;}.content{padding:14px;}.filter-bar{padding:10px 14px;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🛵</div>
+  <div>
+    <h1>iFood Operacional — Drogarias Venâncio</h1>
+    <p id="header-sub">Carregando…</p>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <span class="filter-label">Regional</span>
+  <div class="filter-chip active" onclick="setRegional('TODOS',this)">Todos</div>
+  <div id="regional-chips" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+</div>
+
+<div class="nav-tabs">
+  <div class="tab active" onclick="showSection('overview',this)">📊 Visão Geral</div>
+  <div class="tab" onclick="showSection('stores',this)">🏪 Ranking Lojas</div>
+  <div class="tab" onclick="showSection('alerts',this)">🚨 Alertas</div>
+  <div class="tab" onclick="showSection('trends',this)">📈 Evolução</div>
+</div>
+
+<div class="content">
+
+<!-- OVERVIEW -->
+<div class="section active" id="section-overview">
+  <div class="kpi-grid" id="kpi-grid"></div>
+  <div class="bench-wrap">
+    <div class="sec-header"><h2>📅 Benchmark da Rede por Semana</h2><div class="chip" id="bench-regional-label">Todas as lojas</div></div>
+    <div class="bench-chart" id="bench-chart"></div>
+  </div>
+  <div class="sec-divider"></div>
+  <div class="top-grid">
+    <div class="top-card">
+      <div class="top-card-header"><span class="icon">🏆</span><div><h3>Top 5 Melhores SLA</h3><div class="subtitle">Última semana</div></div></div>
+      <div id="top-best-sla"></div>
+    </div>
+    <div class="top-card">
+      <div class="top-card-header"><span class="icon">⚠️</span><div><h3>Top 5 Piores SLA</h3><div class="subtitle">Última semana</div></div></div>
+      <div id="top-worst-sla"></div>
+    </div>
+    <div class="top-card">
+      <div class="top-card-header"><span class="icon">📦</span><div><h3>Maior Ruptura</h3><div class="subtitle">Última semana</div></div></div>
+      <div id="top-ruptura"></div>
+    </div>
+    <div class="top-card">
+      <div class="top-card-header"><span class="icon">❌</span><div><h3>Maior Cancelamento</h3><div class="subtitle">Última semana</div></div></div>
+      <div id="top-cancel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STORES -->
+<div class="section" id="section-stores">
+  <div class="table-wrap">
+    <div class="table-controls">
+      <input class="search-box" placeholder="🔍 Buscar loja…" id="store-search" oninput="renderStoresTable()">
+      <button class="sort-btn active" id="sort-pedidos" onclick="setSort('pedidos',this)">↓ Volume</button>
+      <button class="sort-btn" id="sort-sla" onclick="setSort('sla',this)">SLA ↑</button>
+      <button class="sort-btn" id="sort-score" onclick="setSort('score',this)">Score Risco ↓</button>
+      <button class="sort-btn" id="sort-cancel" onclick="setSort('cancel',this)">Cancelamento ↓</button>
+      <button class="sort-btn" id="sort-tempo" onclick="setSort('tempo_inicio',this)">Tempo Início ↓</button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Loja</th><th>Regional</th><th>Pedidos</th>
+            <th>SLA Médio ↑</th><th>NSU &lt;5min ↑</th><th>Tempo Início (min) ↓</th>
+            <th>Ruptura</th><th>Cancelamento</th><th>Atraso Crítico</th>
+            <th>Score Risco</th><th>Trend SLA</th>
+          </tr>
+        </thead>
+        <tbody id="stores-tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination">
+      <div class="page-info" id="page-info"></div>
+      <div class="page-btns">
+        <button class="page-btn" id="btn-prev" onclick="changePage(-1)">← Ant.</button>
+        <button class="page-btn" id="btn-next" onclick="changePage(1)">Próx. →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ALERTS -->
+<div class="section" id="section-alerts">
+  <div class="top-grid">
+    <div class="top-card">
+      <div class="top-card-header" style="border-left:3px solid var(--red)"><span class="icon">🛵</span><div><h3>Pior NSU (motoboy &gt;5min na loja)</h3><div class="subtitle">Fila interna — separação lenta</div></div></div>
+      <div id="alert-nsu"></div>
+    </div>
+    <div class="top-card">
+      <div class="top-card-header" style="border-left:3px solid #a78bfa"><span class="icon">⏱️</span><div><h3>Maior Tempo de Início</h3><div class="subtitle">Demora para começar a separar (min)</div></div></div>
+      <div id="alert-tempo"></div>
+    </div>
+    <div class="top-card">
+      <div class="top-card-header" style="border-left:3px solid var(--yellow)"><span class="icon">⏰</span><div><h3>Maior Atraso Crítico</h3><div class="subtitle">Pedidos muito atrasados</div></div></div>
+      <div id="alert-atraso"></div>
+    </div>
+    <div class="top-card">
+      <div class="top-card-header" style="border-left:3px solid var(--accent)"><span class="icon">❌</span><div><h3>Maior Cancelamento</h3><div class="subtitle">Última semana</div></div></div>
+      <div id="alert-cancel"></div>
+    </div>
+  </div>
+
+  <div class="top-grid">
+    <div class="top-card">
+      <div class="top-card-header" style="border-left:3px solid var(--red)"><span class="icon">📉</span><div><h3>Lojas que Pioraram</h3><div class="subtitle">Delta SLA: semana 1 → última semana</div></div></div>
+      <div id="trend-piorou"></div>
+    </div>
+    <div class="top-card">
+      <div class="top-card-header" style="border-left:3px solid var(--green)"><span class="icon">📈</span><div><h3>Lojas que Melhoraram</h3><div class="subtitle">Delta SLA: semana 1 → última semana</div></div></div>
+      <div id="trend-melhorou"></div>
+    </div>
+  </div>
+
+  <div class="sec-header"><h2>🎯 Lojas Críticas — Ação Imediata</h2><div class="chip" id="critical-count"></div></div>
+  <div class="table-wrap">
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Loja</th><th>Regional</th><th>Pedidos</th><th>SLA ↑</th><th>NSU ↑</th><th>T.Início ↓</th><th>Cancel</th><th>Ruptura</th><th>Score</th><th>Problemas</th></tr></thead>
+        <tbody id="critical-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- TRENDS -->
+<div class="section" id="section-trends">
+  <div class="sec-header"><h2>📈 Evolução Semanal por Loja</h2><div class="chip">Top 24 por volume · clique para detalhe</div></div>
+  <div class="top-grid" id="trend-charts"></div>
+</div>
+
+</div><!-- /content -->
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title" id="modal-title"></div><div class="modal-sub" id="modal-sub"></div></div>
+      <button class="modal-close" onclick="closeModalDirect()">✕ Fechar</button>
+    </div>
+    <div class="modal-kpis" id="modal-kpis"></div>
+    <div id="modal-charts"></div>
+  </div>
+</div>
+
+<script>
+const DATA = {"semanas":["09/03/2026 até 15/03/2026","16/03/2026 até 22/03/2026","23/03/2026 até 29/03/2026","30/03/2026 até 05/04/2026","06/04/2026 até 12/04/2026","13/04/2026 até 19/04/2026","20/04/2026 até 26/04/2026","27/04/2026 até 04/05/2026","04/05/2026 até 11/05/2026","11/05/2026 até 17/05/2026","25/05/2026 até 31/05/2026","01/06/2026 até 07/06/2026","08/06/2026 até 14/06/2026"],"regionais":["Daygine","Edinaldo","Juan","Luciana","Marcio","Nathalia","Outros","Raphaela","Rodrigo","Thaysa","Vanderson","Vanessa","Wagner"],"stores":[{"nome":"Drogaria Venancio Gilka Machado - V85","cidade":"RIO DE JANEIRO","regional":"Daygine","pedidos":4451,"sla":48.78,"nsu":54.93,"ruptura":6.34,"cancel":13.41,"atraso":5.99,"tempo_inicio":6.03,"score":15.3,"trend":"↑","sla_series":[44.53,50.1,56.47,56.74,51.86,59.63,57.06,54.94,49.52,58.61,46.62,46.69,48.78],"nsu_series":[52.64,49.15,48.37,55.05,48.91,53.61,54.36,66.91,47.37,57.14,53.57,54.97,54.93],"cancel_series":[10.75,null,9.61,null,null,9.63,11.96,14.2,9.09,10.26,9.41,9.04,13.41],"ruptura_series":[null,null,null,null,null,5.84,9.06,6.47,11.58,13.47,9.74,11.26,6.34],"atraso_series":[17.12,11.65,8.68,4.8,5.47,9.28,2.44,1.8,14.47,3.27,3.25,2.98,5.99],"tempo_inicio_series":[null,null,null,5.99,7.19,6.9,7.18,4.52,8.3,5.58,6.31,5.97,6.03]},{"nome":"Drogaria Venancio Icaraí - V41","cidade":"NITEROI","regional":"Raphaela","pedidos":4094,"sla":60.66,"nsu":65.5,"ruptura":4.75,"cancel":5.21,"atraso":11.5,"tempo_inicio":5.32,"score":7.3,"trend":"↓","sla_series":[80.37,85.53,87.96,83.88,69.31,69.46,67.97,65.55,51.88,57.53,62.18,63.66,60.66],"nsu_series":[76.92,82.86,79.4,83.53,70.57,68.54,60.93,68.59,31.27,57.95,61.94,62.03,65.5],"cancel_series":[5.02,7.89,2.55,null,null,3.78,4.69,4.88,2.26,3.7,3.3,6.61,5.21],"ruptura_series":[null,null,null,null,null,5.62,5.74,7.37,7.69,11.79,8.66,8.96,4.75],"atraso_series":[6.25,5.71,3.75,7.45,12.45,12.36,13.39,10.26,21.92,12.56,9.45,9.2,11.5],"tempo_inicio_series":[null,null,null,3.29,4.6,4.65,4.89,4.48,10.23,5.97,5.31,5.48,5.32]},{"nome":"Drogaria Venancio - V143 - Av Nossa Senhora de Copacabana","cidade":"RIO DE JANEIRO","regional":"Marcio","pedidos":3957,"sla":59.15,"nsu":49.72,"ruptura":6.46,"cancel":10.78,"atraso":5.34,"tempo_inicio":6.78,"score":12.5,"trend":"↓","sla_series":[63.53,68.58,60.44,65.94,64.47,63.78,60.8,67.14,69.01,61.11,56.71,61.28,59.15],"nsu_series":[61.28,64.4,52.63,54.05,52.43,54.25,50.3,56.25,47.76,50.17,45.85,47.44,49.72],"cancel_series":[6.55,6.65,5.3,null,null,5.26,3.98,3.89,5.63,7.1,6.44,4.87,10.78],"ruptura_series":[null,null,null,null,null,7.84,9.17,9.19,11.94,11.63,8.88,8.84,6.46],"atraso_series":[11.59,null,6.91,7.12,8.68,4.9,7.69,4.41,2.99,6.98,9.17,11.86,5.34],"tempo_inicio_series":[null,null,null,6.75,7.22,6.32,7.83,6.11,8.33,7.6,8.12,7.76,6.78]},{"nome":"Drogaria Venancio V88 - Rod. Presidente Dutra 13.006","cidade":"NOVA IGUACU","regional":"Daygine","pedidos":3364,"sla":66.78,"nsu":65.12,"ruptura":6.76,"cancel":7.57,"atraso":6.41,"tempo_inicio":6.28,"score":5.7,"trend":"↓","sla_series":[64.26,64.72,76.58,63.0,65.02,77.9,87.64,78.06,56.07,67.97,84.13,81.9,66.78],"nsu_series":[65.55,67.17,70.42,59.29,77.21,78.05,82.64,77.66,28.35,69.16,79.15,76.24,65.12],"cancel_series":[20.53,18.71,9.49,null,null,7.87,6.56,9.03,8.57,7.36,6.9,7.06,7.57],"ruptura_series":[null,null,null,null,null,9.35,4.55,6.74,13.28,9.81,2.48,2.97,6.76],"atraso_series":[14.83,15.85,6.99,9.25,4.63,5.28,2.48,6.74,31.64,3.74,2.48,2.97,6.41],"tempo_inicio_series":[null,null,null,6.01,4.43,4.95,3.99,4.63,18.45,6.28,4.85,4.69,6.28]},{"nome":"Drogaria Venancio V104 - Av. Ataulfo de Paiva 1260","cidade":"RIO DE JANEIRO","regional":"Edinaldo","pedidos":3311,"sla":68.3,"nsu":73.25,"ruptura":7.82,"cancel":8.3,"atraso":4.94,"tempo_inicio":4.19,"score":5.4,"trend":"↓","sla_series":[74.18,73.84,73.01,73.31,77.0,74.55,77.48,76.64,55.0,75.89,69.7,74.92,68.3],"nsu_series":[71.86,63.91,63.93,64.47,62.67,63.88,74.13,80.08,37.7,72.79,63.64,60.51,73.25],"cancel_series":[3.59,4.66,null,null,null,4.36,5.3,4.74,4.5,3.55,10.0,2.79,8.3],"ruptura_series":[null,null,null,null,null,6.08,5.94,5.36,8.9,7.35,13.89,8.28,7.82],"atraso_series":[10.51,7.14,2.14,2.63,6.67,7.6,4.2,12.26,18.85,8.09,9.09,8.28,4.94],"tempo_inicio_series":[null,null,null,4.51,4.75,5.25,4.0,3.45,9.32,4.31,5.63,6.22,4.19]},{"nome":"V49 - Av. Embaixador Abelardo Bueno","cidade":"RIO DE JANEIRO","regional":"Rodrigo","pedidos":3154,"sla":62.95,"nsu":65.06,"ruptura":1.2,"cancel":10.43,"atraso":6.43,"tempo_inicio":5.47,"score":6.3,"trend":"↓","sla_series":[51.69,51.4,65.31,60.0,64.83,63.87,65.88,67.98,46.45,61.72,66.97,65.78,62.95],"nsu_series":[52.17,45.7,51.33,50.79,55.8,55.41,52.22,63.11,28.43,60.91,63.18,60.24,65.06],"cancel_series":[5.24,10.49,2.95,null,null,2.94,3.79,3.56,129.0,5.74,2.22,3.42,10.43],"ruptura_series":[null,null,null,null,null,7.79,8.37,11.07,8.5,6.6,4.09,7.09,1.2],"atraso_series":[15.42,11.72,5.32,6.69,5.36,6.49,2.96,2.46,21.9,3.55,5.0,3.94,6.43],"tempo_inicio_series":[null,null,null,6.93,6.66,6.27,6.81,5.77,11.88,6.92,6.25,6.2,5.47]},{"nome":"Drogaria Venancio V146 - Campos - Parque Tamandaré","cidade":"CAMPOS DOS GOYTACAZES","regional":"Vanderson","pedidos":2745,"sla":59.31,"nsu":51.15,"ruptura":3.93,"cancel":3.79,"atraso":4.92,"tempo_inicio":7.24,"score":10.6,"trend":"↑","sla_series":[54.55,57.93,58.26,50.53,54.66,50.45,66.67,63.52,39.29,63.77,50.87,51.01,59.31],"nsu_series":[39.58,43.02,47.2,46.33,42.92,44.5,52.6,56.0,55.42,54.74,44.83,48.66,51.15],"cancel_series":[8.13,4.8,6.96,null,null,5.86,3.89,3.43,119.0,8.21,10.42,12.42,3.79],"ruptura_series":[null,null,null,null,null,7.66,8.67,5.33,8.43,6.32,7.33,9.2,3.93],"atraso_series":[8.33,10.85,null,10.73,11.95,10.05,1.16,2.22,7.23,2.63,5.17,4.98,4.92],"tempo_inicio_series":[null,null,null,8.01,9.53,7.86,6.79,6.57,7.14,6.76,7.53,7.96,7.24]},{"nome":"V142 - Drogaria Venancio - Av Meriti","cidade":"RIO DE JANEIRO","regional":"Marcio","pedidos":2693,"sla":71.8,"nsu":71.34,"ruptura":3.26,"cancel":10.76,"atraso":8.47,"tempo_inicio":4.75,"score":3.8,"trend":"→","sla_series":[72.51,76.88,80.13,null,65.54,68.83,82.87,null,77.36,71.13,72.14,71.8,null],"nsu_series":[74.55,75.65,69.07,null,67.19,65.29,73.61,null,64.43,67.18,66.32,71.34,null],"cancel_series":[5.5,7.51,null,null,null,10.19,5.94,null,6.29,9.97,8.95,10.76,null],"ruptura_series":[null,null,null,null,null,2.75,6.32,null,2.01,6.87,4.91,3.26,null],"atraso_series":[8.73,9.74,6.53,null,8.98,12.37,5.95,null,6.04,7.25,8.07,8.47,null],"tempo_inicio_series":[null,null,null,null,5.02,5.75,3.91,null,5.1,4.48,5.03,4.75,null]},{"nome":"V148","cidade":"CABO FRIO","regional":"Vanderson","pedidos":2540,"sla":44.23,"nsu":51.35,"ruptura":4.86,"cancel":11.06,"atraso":7.57,"tempo_inicio":7.98,"score":17.2,"trend":"↓","sla_series":[49.51,47.74,56.22,45.16,44.16,54.58,52.0,50.21,null,52.74,60.61,59.51,44.23],"nsu_series":[48.24,41.13,40.68,36.84,29.17,38.96,42.2,42.15,null,43.88,42.22,48.48,51.35],"cancel_series":[2.45,4.94,5.22,null,null,4.96,3.11,4.29,null,4.79,5.26,3.41,11.06],"ruptura_series":[null,null,null,null,null,3.61,5.05,3.59,null,72.0,6.67,5.05,4.86],"atraso_series":[13.57,12.55,7.2,10.53,12.04,10.44,5.05,2.69,null,2.88,2.78,3.54,7.57],"tempo_inicio_series":[null,null,null,10.01,10.73,8.35,8.38,8.67,null,7.77,8.32,7.81,7.98]},{"nome":"Drogaria Venancio V139 - Teresópolis","cidade":"TERESOPOLIS","regional":"Marcio","pedidos":2484,"sla":54.63,"nsu":48.33,"ruptura":4.78,"cancel":3.24,"atraso":4.78,"tempo_inicio":7.75,"score":13.0,"trend":"↑","sla_series":[63.05,62.35,61.5,59.82,63.23,60.09,65.33,65.95,null,67.5,55.71,50.72,54.63],"nsu_series":[55.67,49.18,44.06,49.76,52.56,48.42,50.52,54.05,null,53.57,52.49,48.24,48.33],"cancel_series":[4.43,4.31,5.16,null,null,3.07,3.52,4.31,null,2.0,7.65,3.86,3.24],"ruptura_series":[null,null,null,null,null,10.86,6.77,4.95,null,4.59,3.87,4.02,4.78],"atraso_series":[7.22,6.97,4.95,7.18,7.44,6.79,3.13,3.15,null,2.55,3.31,2.51,4.78],"tempo_inicio_series":[null,null,null,6.97,6.46,6.41,5.83,6.46,null,6.3,7.89,7.58,7.75]},{"nome":"Drogaria Venancio Joaquim Pinheiro - V84","cidade":"RIO DE JANEIRO","regional":"Vanessa","pedidos":2271,"sla":83.82,"nsu":77.51,"ruptura":7.1,"cancel":2.31,"atraso":7.69,"tempo_inicio":3.45,"score":2.2,"trend":"↓","sla_series":[81.66,83.43,85.45,80.84,75.15,78.62,79.63,83.8,67.9,77.18,84.98,84.95,83.82],"nsu_series":[77.25,75.93,75.76,78.53,69.75,76.6,80.5,83.24,55.26,72.73,73.73,75.54,77.51],"cancel_series":[118.0,4.14,0.0,null,null,2.76,1.85,3.35,1.85,4.03,2.25,1.08,2.31],"ruptura_series":[null,null,null,null,null,5.67,7.55,2.89,4.89,9.09,5.07,5.98,7.1],"atraso_series":[1.8,3.7,4.24,6.75,4.94,11.35,6.29,6.36,8.65,6.29,5.99,5.98,7.69],"tempo_inicio_series":[null,null,null,3.4,4.09,3.44,3.12,3.0,6.0,4.16,3.83,3.44,3.45]},{"nome":"Drogaria Venancio Búzios - V118.","cidade":"ARMACAO DOS BUZIOS","regional":"Luciana","pedidos":2154,"sla":52.67,"nsu":42.4,"ruptura":4.0,"cancel":4.58,"atraso":3.2,"tempo_inicio":7.3,"score":15.1,"trend":"↓","sla_series":[70.0,56.14,71.98,62.61,70.14,69.9,66.67,60.53,44.07,55.7,60.0,62.11,52.67],"nsu_series":[76.77,67.48,61.11,68.58,70.0,57.98,60.32,70.59,41.07,50.0,55.56,60.0,42.4],"cancel_series":[3.13,4.68,null,null,null,4.08,3.45,3.07,5.08,6.04,6.71,3.73,4.58],"ruptura_series":[null,null,null,null,null,6.91,7.94,8.6,16.07,7.14,5.88,4.52,4.0],"atraso_series":[5.16,10.43,8.89,5.75,5.71,5.32,5.95,7.24,12.5,6.43,6.54,7.1,3.2],"tempo_inicio_series":[null,null,null,4.32,4.84,4.71,5.77,4.5,7.26,5.98,5.85,5.72,7.3]},{"nome":"Drogaria Venancio V133 - Tijuca","cidade":"RIO DE JANEIRO","regional":"Marcio","pedidos":1963,"sla":67.27,"nsu":68.55,"ruptura":0.63,"cancel":3.64,"atraso":8.18,"tempo_inicio":4.36,"score":3.8,"trend":"↓","sla_series":[71.1,74.66,72.19,73.74,68.39,70.63,81.12,63.19,83.33,80.14,77.22,77.64,67.27],"nsu_series":[67.65,72.14,64.86,69.59,62.25,68.57,78.99,63.7,51.05,69.29,65.68,67.92,68.55],"cancel_series":[1.73,null,1.99,null,null,2.1,3.5,6.25,69.0,71.0,3.98,1.24,3.64],"ruptura_series":[null,null,null,null,null,2.86,7.25,4.44,70.0,4.29,4.14,5.66,0.63],"atraso_series":[4.12,5.0,0.0,1.75,5.96,7.86,2.9,12.59,3.5,6.43,3.55,3.77,8.18],"tempo_inicio_series":[null,null,null,4.05,4.63,4.9,3.42,4.82,5.73,4.07,5.23,4.75,4.36]},{"nome":"Drogaria Venancio V116 - Rua Haddock Lobo 360","cidade":"RIO DE JANEIRO","regional":"Luciana","pedidos":1960,"sla":81.6,"nsu":82.5,"ruptura":3.33,"cancel":4.0,"atraso":3.33,"tempo_inicio":2.7,"score":1.4,"trend":"↑","sla_series":[78.07,75.5,81.1,71.93,74.27,64.5,73.58,71.85,66.67,73.91,69.35,68.86,81.6],"nsu_series":[73.6,72.54,78.26,70.0,73.29,68.92,75.14,79.84,50.75,83.33,68.02,69.51,82.5],"cancel_series":[4.81,5.96,1.83,null,null,12.43,8.29,4.44,2.9,87.0,3.37,1.8,4.0],"ruptura_series":[null,null,null,null,null,11.49,10.17,12.4,11.94,4.39,4.65,4.88,3.33],"atraso_series":[4.49,6.34,6.21,6.88,4.35,6.76,2.26,4.65,17.16,5.26,4.65,2.44,3.33],"tempo_inicio_series":[null,null,null,4.32,3.83,3.97,3.6,3.6,9.6,3.44,4.17,4.16,2.7]},{"nome":"V99 - R. Dr. Felíciano Sodré 216","cidade":"SAO GONCALO","regional":"Daygine","pedidos":1945,"sla":55.74,"nsu":53.98,"ruptura":9.09,"cancel":3.83,"atraso":4.55,"tempo_inicio":6.85,"score":12.1,"trend":"↑","sla_series":[58.13,63.12,70.68,65.96,72.67,64.0,70.54,71.69,54.32,74.01,53.88,50.45,55.74],"nsu_series":[53.38,65.19,56.82,59.4,68.86,61.9,70.91,70.63,36.84,70.69,46.15,50.0,53.98],"cancel_series":[7.5,4.26,75.0,null,null,4.0,1.79,3.61,6.17,1.69,6.02,5.41,3.83],"ruptura_series":[null,null,null,null,null,3.57,4.55,2.5,2.63,4.02,8.33,7.14,9.09],"atraso_series":[21.62,13.33,8.33,6.02,4.19,9.52,3.64,3.13,11.84,2.87,9.62,9.52,4.55],"tempo_inicio_series":[null,null,null,7.12,4.46,7.23,4.28,3.95,10.06,4.53,6.99,7.29,6.85]},{"nome":"Drogaria Venancio Maracanã - V72","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":1923,"sla":51.96,"nsu":59.04,"ruptura":9.64,"cancel":18.63,"atraso":9.64,"tempo_inicio":5.24,"score":14.8,"trend":"↓","sla_series":[61.9,53.95,57.94,null,50.65,64.86,78.5,74.29,50.93,71.88,null,61.11,51.96],"nsu_series":[65.12,50.26,45.77,null,41.79,56.6,76.47,null,38.06,71.88,null,63.46,59.04],"cancel_series":[8.99,13.32,9.26,null,null,4.5,4.67,null,4.32,0.0,null,3.7,18.63],"ruptura_series":[null,null,null,null,null,13.21,11.76,null,14.84,18.75,null,13.46,9.64],"atraso_series":[6.69,null,7.87,null,8.96,4.72,0.0,null,14.52,9.38,null,7.69,9.64],"tempo_inicio_series":[null,null,null,null,8.27,6.23,4.09,3.74,8.14,3.69,null,4.96,5.24]},{"nome":"V76 - Av. das Américas","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":1870,"sla":65.33,"nsu":72.41,"ruptura":1.38,"cancel":3.33,"atraso":6.9,"tempo_inicio":3.83,"score":4.5,"trend":"→","sla_series":[42.55,50.37,63.71,62.31,60.27,63.87,69.93,65.61,58.67,68.59,63.09,66.07,65.33],"nsu_series":[51.52,53.6,76.92,73.81,70.29,70.0,78.52,73.68,45.95,72.73,67.74,68.13,72.41],"cancel_series":[6.38,7.41,5.65,null,null,3.23,2.61,3.18,133.0,128.0,3.5,4.76,3.33],"ruptura_series":[null,null,null,null,null,9.33,3.36,3.95,6.76,4.55,6.05,3.75,1.38],"atraso_series":[12.12,4.8,2.56,3.97,145.0,6.67,4.7,2.63,135.0,2.6,6.05,3.13,6.9],"tempo_inicio_series":[null,null,null,3.52,3.89,4.25,3.53,3.36,6.64,4.01,4.6,4.08,3.83]},{"nome":"V50 - Av. Nilo Peçanha 248","cidade":"DUQUE DE CAXIAS","regional":"Rodrigo","pedidos":1866,"sla":84.48,"nsu":77.07,"ruptura":1.27,"cancel":9.77,"atraso":8.92,"tempo_inicio":3.73,"score":2.2,"trend":"↑","sla_series":[71.43,73.89,77.22,75.0,68.82,83.24,82.93,82.47,56.12,82.35,62.86,74.59,84.48],"nsu_series":[74.17,72.6,76.82,78.72,76.67,77.14,85.59,78.91,35.96,69.66,57.14,60.59,77.07],"cancel_series":[6.21,null,4.43,null,null,2.23,4.07,4.55,9.18,4.81,5.97,8.11,9.77],"ruptura_series":[null,null,null,null,null,4.57,5.08,3.4,10.11,4.49,4.76,4.71,1.27],"atraso_series":[19.21,20.55,7.28,7.09,7.22,4.57,3.39,3.4,22.47,5.62,6.35,4.12,8.92],"tempo_inicio_series":[null,null,null,3.43,4.2,3.47,2.81,3.65,7.22,4.04,4.05,5.06,3.73]},{"nome":"V20 - Barra da Tijuca","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":1837,"sla":69.39,"nsu":41.38,"ruptura":5.52,"cancel":1.36,"atraso":4.83,"tempo_inicio":8.03,"score":9.4,"trend":"↑","sla_series":[66.41,65.06,76.11,60.16,58.5,55.65,66.14,64.6,48.03,66.85,65.58,68.21,69.39],"nsu_series":[62.6,35.19,51.33,43.55,32.17,33.88,47.97,47.22,40.83,39.53,43.72,38.1,41.38],"cancel_series":[3.91,2.41,0.0,null,null,2.42,3.15,4.42,5.51,6.52,2.71,2.89,1.36],"ruptura_series":[null,null,null,null,null,2.48,4.07,8.33,17.5,8.14,6.98,8.33,5.52],"atraso_series":[16.26,20.37,13.27,11.29,14.69,7.44,6.5,5.56,22.5,6.4,9.3,10.12,4.83],"tempo_inicio_series":[null,null,null,8.14,10.58,9.35,9.53,9.8,9.69,9.11,10.46,10.61,8.03]},{"nome":"V105 - Estrada do Monteiro, Esquina Com Rua Seabra, 20","cidade":"RIO DE JANEIRO","regional":"Edinaldo","pedidos":1785,"sla":74.37,"nsu":84.41,"ruptura":2.69,"cancel":6.53,"atraso":6.45,"tempo_inicio":3.13,"score":2.1,"trend":"↑","sla_series":[76.34,70.8,73.95,67.21,72.58,70.23,75.7,77.78,65.79,84.09,71.21,73.16,74.37],"nsu_series":[90.22,87.04,82.05,85.34,89.34,85.71,83.96,84.85,56.64,89.92,76.73,79.63,84.41],"cancel_series":[108.0,4.42,1.68,null,null,3.82,0.93,3.51,5.92,2.27,8.09,6.49,6.53],"ruptura_series":[null,null,null,null,null,2.38,2.83,3.64,6.99,1.55,4.4,4.63,2.69],"atraso_series":[8.7,8.33,3.42,8.62,1.64,3.17,4.72,5.45,5.59,3.88,8.81,7.87,6.45],"tempo_inicio_series":[null,null,null,2.86,2.35,2.56,2.91,3.05,6.29,2.31,3.43,3.27,3.13]},{"nome":"Drogaria Venancio Abelardo Bueno - V75","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":1708,"sla":54.22,"nsu":61.33,"ruptura":4.0,"cancel":9.64,"atraso":6.67,"tempo_inicio":5.36,"score":10.8,"trend":"↑","sla_series":[60.29,59.82,68.62,50.8,62.88,66.36,63.33,62.63,56.02,56.95,52.65,52.87,54.22],"nsu_series":[72.14,63.3,62.7,58.38,59.35,54.81,70.24,61.86,48.73,63.41,45.78,47.62,61.33],"cancel_series":[3.83,2.68,1.6,null,null,2.8,6.67,2.02,4.82,18.54,6.74,3.45,9.64],"ruptura_series":[null,null,null,null,null,2.88,7.14,2.06,5.7,2.44,10.84,5.95,4.0],"atraso_series":[14.93,11.47,5.41,17.92,18.7,13.46,13.1,9.28,12.66,4.88,10.84,9.52,6.67],"tempo_inicio_series":[null,null,null,6.47,6.73,7.04,4.85,6.01,6.45,4.75,8.07,8.52,5.36]},{"nome":"V25 - Av Marechal Henrique Lott 333","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":1702,"sla":56.45,"nsu":45.71,"ruptura":7.62,"cancel":15.32,"atraso":9.52,"tempo_inicio":6.66,"score":15.6,"trend":"↓","sla_series":[53.69,57.14,54.17,52.38,59.5,50.4,63.89,66.67,42.07,54.69,59.43,61.9,56.45],"nsu_series":[48.59,39.69,43.22,41.56,53.1,46.67,58.1,61.38,33.33,42.5,44.74,46.28,45.71],"cancel_series":[4.7,150.0,1.67,null,null,4.0,2.78,3.33,4.83,6.25,5.0,3.97,15.32],"ruptura_series":[null,null,null,null,null,8.33,7.62,5.52,10.87,10.0,8.95,12.4,7.62],"atraso_series":[16.2,11.45,6.78,5.84,4.42,6.67,2.86,5.52,20.29,8.33,10.53,8.26,9.52],"tempo_inicio_series":[null,null,null,6.96,6.99,9.24,5.45,5.75,9.31,9.01,10.99,11.21,6.66]},{"nome":"Drogaria Venancio V130 - Tijuca","cidade":"RIO DE JANEIRO","regional":"Luciana","pedidos":1586,"sla":72.73,"nsu":78.38,"ruptura":2.03,"cancel":3.9,"atraso":3.38,"tempo_inicio":3.32,"score":2.0,"trend":"→","sla_series":[78.06,77.93,78.17,78.08,80.15,75.93,82.95,76.79,null,66.67,69.9,72.08,72.73],"nsu_series":[85.42,85.11,78.26,79.86,78.46,83.84,83.46,84.91,null,76.03,68.71,72.6,78.38],"cancel_series":[7.1,2.76,2.82,null,null,8.33,1.55,5.36,null,8.33,4.55,5.19,3.9],"ruptura_series":[null,null,null,null,null,4.04,7.09,5.66,null,5.79,7.48,4.79,2.03],"atraso_series":[7.64,8.51,72.0,5.76,3.85,4.04,2.36,8.49,null,8.26,5.44,5.48,3.38],"tempo_inicio_series":[null,null,null,2.91,3.39,3.04,2.84,2.7,null,3.72,4.22,4.28,3.32]},{"nome":"Drogaria Venancio V152 - Bangu","cidade":"RIO DE JANEIRO","regional":"Vanderson","pedidos":1570,"sla":64.33,"nsu":66.67,"ruptura":3.47,"cancel":8.28,"atraso":7.64,"tempo_inicio":6.96,"score":6.1,"trend":"↓","sla_series":[61.21,68.03,73.6,68.09,62.86,68.07,71.79,72.79,null,68.66,62.75,65.44,64.33],"nsu_series":[73.39,68.7,72.27,72.39,58.59,73.04,73.87,70.15,null,74.05,65.36,68.45,66.67],"cancel_series":[6.03,5.74,4.8,null,null,3.36,5.13,1.47,null,2.24,8.43,5.07,8.28],"ruptura_series":[null,null,null,null,null,5.22,4.5,6.72,null,5.34,4.58,2.91,3.47],"atraso_series":[8.26,9.57,7.56,8.21,9.09,10.43,9.01,1.49,null,9.92,9.15,8.74,7.64],"tempo_inicio_series":[null,null,null,4.12,6.82,5.39,4.16,4.03,null,4.9,5.31,5.04,6.96]},{"nome":"V90 - Av. Dr. Mario Guimarães 397","cidade":"NOVA IGUACU","regional":"Daygine","pedidos":1552,"sla":63.19,"nsu":72.36,"ruptura":5.69,"cancel":14.58,"atraso":4.88,"tempo_inicio":7.0,"score":7.7,"trend":"↓","sla_series":[60.2,70.24,85.82,68.03,74.58,null,88.36,83.49,43.95,76.77,86.02,83.7,63.19],"nsu_series":[67.42,74.52,73.53,67.18,55.42,null,63.38,82.83,23.12,73.63,87.91,86.72,72.36],"cancel_series":[9.18,6.55,3.55,null,null,null,2.74,9.17,10.76,8.08,9.0,5.19,14.58],"ruptura_series":[null,null,null,null,null,null,5.63,8.08,12.56,12.09,5.49,3.91,5.69],"atraso_series":[12.36,10.19,9.56,7.63,3.01,null,7.75,7.07,32.66,9.89,2.2,1.56,4.88],"tempo_inicio_series":[null,null,null,5.83,6.09,null,8.21,4.15,16.8,5.3,3.27,3.46,7.0]},{"nome":"V52 - Rua do Catete, 124/126","cidade":"RIO DE JANEIRO","regional":"Rodrigo","pedidos":1535,"sla":59.09,"nsu":54.46,"ruptura":4.95,"cancel":8.18,"atraso":5.94,"tempo_inicio":6.42,"score":10.7,"trend":"↑","sla_series":[50.3,62.33,69.51,51.28,61.03,63.64,70.59,53.16,41.89,53.06,55.88,54.81,59.09],"nsu_series":[54.04,61.43,59.12,55.26,54.14,60.0,70.09,null,32.88,45.83,58.56,57.14,54.46],"cancel_series":[4.73,null,null,null,null,4.96,1.68,null,135.0,2.04,4.31,5.77,8.18],"ruptura_series":[null,null,null,null,null,5.22,6.84,null,9.59,4.17,2.7,3.06,4.95],"atraso_series":[19.88,12.14,3.77,7.24,9.02,5.22,5.13,null,19.18,104.0,2.7,1.02,5.94],"tempo_inicio_series":[null,null,null,6.22,5.93,4.98,5.06,5.57,10.44,6.47,5.88,5.94,6.42]},{"nome":"V43 - Rua Voluntários da Pátria 257","cidade":"RIO DE JANEIRO","regional":"Raphaela","pedidos":1482,"sla":57.14,"nsu":59.7,"ruptura":5.97,"cancel":4.29,"atraso":7.46,"tempo_inicio":4.98,"score":9.8,"trend":"↓","sla_series":[60.27,68.89,74.56,66.14,66.67,60.9,69.85,80.0,59.46,65.26,60.26,58.59,57.14],"nsu_series":[66.67,66.42,70.8,67.21,66.95,63.93,67.18,78.5,55.07,59.57,62.5,57.5,59.7],"cancel_series":[5.48,74.0,88.0,null,null,8.27,3.68,2.73,6.76,105.0,6.98,6.25,4.29],"ruptura_series":[null,null,null,null,null,9.02,7.63,3.74,8.7,3.19,8.75,7.5,5.97],"atraso_series":[8.7,7.46,5.31,8.2,6.78,14.75,7.63,0.93,10.14,5.32,5.0,5.83,7.46],"tempo_inicio_series":[null,null,null,4.46,4.52,5.13,4.74,3.0,6.25,4.65,5.87,5.39,4.98]},{"nome":"Drogaria Venancio V128 - Piratininga","cidade":"NITEROI","regional":"Luciana","pedidos":1445,"sla":60.47,"nsu":69.92,"ruptura":4.07,"cancel":4.65,"atraso":2.44,"tempo_inicio":4.63,"score":6.7,"trend":"↑","sla_series":[62.89,66.67,62.0,64.75,64.23,61.86,69.83,80.37,57.81,69.79,59.09,59.05,60.47],"nsu_series":[62.59,63.71,64.63,75.63,64.96,68.14,68.42,80.95,66.67,69.15,56.41,57.43,69.92],"cancel_series":[7.55,1.59,2.0,null,null,4.24,1.72,1.87,1.56,2.08,3.7,3.81,4.65],"ruptura_series":[null,null,null,null,null,4.42,11.4,1.9,3.17,9.57,8.97,7.92,4.07],"atraso_series":[6.12,12.9,10.2,5.04,10.26,11.5,5.26,4.76,6.35,3.19,5.13,5.94,2.44],"tempo_inicio_series":[null,null,null,3.7,4.41,4.06,4.62,3.28,5.22,4.67,5.8,5.42,4.63]},{"nome":"Drogaria Venancio V78 - R. Marquês de Abrantes, 88","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":1439,"sla":74.83,"nsu":87.5,"ruptura":5.47,"cancel":12.93,"atraso":1.56,"tempo_inicio":2.83,"score":3.2,"trend":"↓","sla_series":[75.59,66.2,65.77,61.48,75.61,65.15,68.75,62.73,92.0,58.54,74.78,78.53,74.83],"nsu_series":[90.35,73.28,80.9,83.87,85.05,92.63,83.65,null,77.55,86.67,74.78,80.56,87.5],"cancel_series":[10.24,18.31,19.82,null,null,28.03,18.75,null,2.0,26.83,13.08,11.66,12.93],"ruptura_series":[null,null,null,null,null,14.74,15.38,null,14.29,15.56,18.58,15.97,5.47],"atraso_series":[5.26,2.59,3.37,6.45,1.87,1.05,3.85,null,2.04,5.56,0.88,0.0,1.56],"tempo_inicio_series":[null,null,null,2.95,3.21,2.43,3.58,2.59,3.08,2.67,3.04,2.98,2.83]},{"nome":"Drogaria Venancio Olegário Maciel - V05","cidade":"RIO DE JANEIRO","regional":"Outros","pedidos":1438,"sla":63.23,"nsu":46.85,"ruptura":6.29,"cancel":7.74,"atraso":6.99,"tempo_inicio":8.48,"score":11.4,"trend":"↓","sla_series":[82.22,90.11,87.23,72.12,78.22,75.0,87.78,88.24,39.05,85.71,71.43,70.87,63.23],"nsu_series":[63.1,67.03,64.84,59.78,55.1,63.53,66.67,71.55,27.16,62.42,69.67,70.34,46.85],"cancel_series":[6.67,0.0,3.19,null,null,3.41,3.33,2.52,4.14,7.45,3.17,7.09,7.74],"ruptura_series":[null,null,null,null,null,5.88,5.75,7.76,6.17,8.05,9.84,8.47,6.29],"atraso_series":[8.33,6.59,3.3,3.26,5.1,2.35,1.15,4.31,32.1,4.7,4.92,2.54,6.99],"tempo_inicio_series":[null,null,null,7.24,6.95,5.12,5.42,4.61,14.46,5.59,5.48,5.96,8.48]},{"nome":"Drogaria Venancio V121 - Laranjeiras","cidade":"RIO DE JANEIRO","regional":"Luciana","pedidos":1430,"sla":73.91,"nsu":76.15,"ruptura":2.75,"cancel":5.22,"atraso":11.01,"tempo_inicio":3.78,"score":2.3,"trend":"→","sla_series":[74.14,75.0,65.09,58.46,68.6,73.23,77.12,80.87,45.83,81.29,70.83,73.53,73.91],"nsu_series":[71.43,70.48,69.61,67.77,74.11,72.88,77.39,82.08,50.72,81.05,64.0,68.42,76.15],"cancel_series":[3.45,2.78,3.77,null,null,7.09,2.54,7.83,4.17,129.0,5.06,2.21,5.22],"ruptura_series":[null,null,null,null,null,8.47,5.22,5.66,10.14,5.23,5.33,4.51,2.75],"atraso_series":[5.36,7.62,3.92,4.96,1.79,5.08,1.74,5.66,13.04,10.46,4.0,6.02,11.01],"tempo_inicio_series":[null,null,null,4.28,3.48,4.05,3.71,2.86,6.29,3.48,3.34,4.05,3.78]},{"nome":"Méier - V37","cidade":"RIO DE JANEIRO","regional":"Raphaela","pedidos":1412,"sla":68.0,"nsu":70.75,"ruptura":6.6,"cancel":15.2,"atraso":5.66,"tempo_inicio":4.19,"score":6.3,"trend":"→","sla_series":[67.74,74.1,72.87,59.57,62.39,72.57,70.34,68.18,62.22,70.09,68.8,67.18,68.0],"nsu_series":[66.95,66.41,67.74,59.83,70.11,73.08,77.45,72.16,42.86,58.59,59.38,59.13,70.75],"cancel_series":[4.84,5.76,3.88,null,null,7.96,13.56,11.82,6.67,7.48,11.11,12.21,15.2],"ruptura_series":[null,null,null,null,null,4.81,8.82,15.46,8.33,14.14,8.59,7.83,6.6],"atraso_series":[9.32,5.34,4.84,8.55,9.2,7.69,4.9,6.19,8.33,10.1,3.91,1.74,5.66],"tempo_inicio_series":[null,null,null,6.7,5.11,4.66,4.48,3.82,8.82,7.62,6.14,5.87,4.19]},{"nome":"V79 - Drogaria Venancio - Estrada da Cacuia","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":1386,"sla":76.47,"nsu":72.5,"ruptura":6.25,"cancel":5.88,"atraso":3.75,"tempo_inicio":4.38,"score":2.3,"trend":"→","sla_series":[70.37,77.46,78.4,72.3,76.16,78.63,83.72,76.0,58.93,70.83,76.0,76.47,null],"nsu_series":[76.61,72.46,78.52,67.38,70.0,69.23,74.02,74.17,62.26,81.82,74.67,72.5,null],"cancel_series":[8.15,2.82,null,null,null,0.76,1.55,4.0,5.36,17.5,1.32,5.88,null],"ruptura_series":[null,null,null,null,null,5.38,8.66,6.67,5.66,11.11,4.0,6.25,null],"atraso_series":[4.84,null,3.36,4.96,6.67,5.38,0.79,6.67,13.21,4.04,4.0,3.75,null],"tempo_inicio_series":[null,null,null,4.56,4.73,4.08,3.65,4.27,9.86,5.44,4.36,4.38,null]},{"nome":"V16 - Méier","cidade":"RIO DE JANEIRO","regional":"Juan","pedidos":1368,"sla":73.65,"nsu":54.29,"ruptura":8.57,"cancel":5.41,"atraso":12.14,"tempo_inicio":8.05,"score":6.3,"trend":"↑","sla_series":[76.74,79.81,75.76,68.13,85.33,77.65,80.26,77.65,54.2,75.4,66.27,66.67,73.65],"nsu_series":[75.61,67.0,68.18,64.04,71.23,69.88,73.33,null,39.53,79.34,52.17,58.04,54.29],"cancel_series":[4.65,3.85,0.0,null,null,2.35,1.32,null,1.53,3.97,1.07,0.69,5.41],"ruptura_series":[null,null,null,null,null,3.61,5.33,null,10.08,6.61,8.15,9.79,8.57],"atraso_series":[4.88,7.0,10.61,10.11,2.74,6.02,2.67,null,12.4,6.61,6.52,11.89,12.14],"tempo_inicio_series":[null,null,null,5.07,3.75,4.43,3.9,3.95,8.9,3.51,5.8,6.36,8.05]},{"nome":"Drogaria Venancio V135 - Vila Santa Cecília","cidade":"RIO DE JANEIRO","regional":"Marcio","pedidos":1346,"sla":57.55,"nsu":66.67,"ruptura":2.94,"cancel":3.77,"atraso":3.92,"tempo_inicio":4.63,"score":7.5,"trend":"↑","sla_series":[46.77,54.55,57.72,64.18,54.46,56.83,58.1,58.91,null,45.78,58.54,54.03,57.55],"nsu_series":[57.14,58.27,56.56,73.28,56.6,56.15,56.0,60.63,null,49.38,60.98,56.3,66.67],"cancel_series":[4.03,3.79,81.0,null,null,6.47,4.76,1.55,null,2.41,6.82,4.03,3.77],"ruptura_series":[null,null,null,null,null,6.92,8.0,3.15,null,8.64,1.22,1.68,2.94],"atraso_series":[9.24,7.87,7.38,6.11,94.0,7.69,3.0,6.3,null,9.88,7.32,8.4,3.92],"tempo_inicio_series":[null,null,null,3.81,5.02,5.9,4.95,4.7,null,6.54,5.98,5.72,4.63]},{"nome":"Drogaria Venancio V95 - Avenida Dom Helder Câmara 5273","cidade":"RIO DE JANEIRO","regional":"Daygine","pedidos":1342,"sla":88.42,"nsu":90.91,"ruptura":4.55,"cancel":7.37,"atraso":2.27,"tempo_inicio":2.55,"score":2.1,"trend":"↑","sla_series":[77.54,76.58,77.59,70.16,69.57,69.37,81.72,84.85,57.66,66.25,86.14,87.31,88.42],"nsu_series":[68.66,73.33,72.48,62.61,57.27,66.99,75.28,88.66,53.21,72.86,74.7,70.0,90.91],"cancel_series":[2.9,5.41,null,null,null,7.21,4.3,2.02,1.8,12.5,1.19,2.99,7.37],"ruptura_series":[null,null,null,null,null,7.77,4.49,8.25,10.09,10.0,6.02,6.92,4.55],"atraso_series":[8.96,2.86,3.67,8.7,9.09,7.77,0.0,2.06,7.34,143.0,3.61,4.62,2.27],"tempo_inicio_series":[null,null,null,5.79,7.08,4.76,3.61,2.69,6.49,4.58,3.83,4.26,2.55]},{"nome":"V81 - Rua Jardim Botânico 657","cidade":"RIO DE JANEIRO","regional":"Vanessa","pedidos":1330,"sla":77.67,"nsu":73.68,"ruptura":5.26,"cancel":7.77,"atraso":10.53,"tempo_inicio":4.03,"score":2.7,"trend":"↑","sla_series":[72.66,82.29,75.93,77.5,68.93,72.41,73.33,79.12,55.24,83.74,65.74,67.29,77.67],"nsu_series":[74.8,72.63,60.95,67.95,67.96,62.16,58.65,null,54.55,74.59,55.05,60.0,73.68],"cancel_series":[3.91,null,2.78,null,null,4.31,0.95,null,5.71,81.0,6.03,6.54,7.77],"ruptura_series":[null,null,null,null,null,13.51,9.62,null,5.05,9.02,10.09,17.0,5.26],"atraso_series":[4.07,7.37,9.52,5.13,6.8,3.6,1.92,null,10.1,6.56,7.34,8.0,10.53],"tempo_inicio_series":[null,null,null,4.7,4.75,5.18,4.62,2.95,5.94,3.78,4.5,5.08,4.03]},{"nome":"Grajaú - V34","cidade":"RIO DE JANEIRO","regional":"Raphaela","pedidos":1316,"sla":72.64,"nsu":56.73,"ruptura":6.73,"cancel":1.89,"atraso":9.62,"tempo_inicio":7.07,"score":5.0,"trend":"↑","sla_series":[75.83,80.0,80.81,73.39,75.0,78.76,68.85,80.82,53.19,68.75,66.39,68.81,72.64],"nsu_series":[62.61,59.84,61.86,49.06,65.45,74.07,59.02,null,44.57,60.64,60.66,55.96,56.73],"cancel_series":[4.17,2.31,null,null,null,4.42,0.0,null,2.13,2.08,2.4,0.0,1.89],"ruptura_series":[null,null,null,null,null,9.26,9.84,null,8.7,6.38,4.92,4.59,6.73],"atraso_series":[5.22,3.94,8.25,8.49,10.91,11.11,1.64,null,21.74,8.51,6.56,8.26,9.62],"tempo_inicio_series":[null,null,null,8.81,4.95,5.35,6.73,3.54,7.48,5.91,6.25,6.2,7.07]},{"nome":"V87 - Perimetral Brigadeiro Lima e Silva 1963","cidade":"DUQUE DE CAXIAS","regional":"Daygine","pedidos":1301,"sla":62.9,"nsu":58.97,"ruptura":4.27,"cancel":5.65,"atraso":5.13,"tempo_inicio":6.4,"score":7.7,"trend":"↓","sla_series":[73.2,63.37,72.73,72.84,68.27,70.54,62.96,68.33,36.73,68.57,75.23,73.88,62.9],"nsu_series":[85.42,73.68,72.37,72.5,75.25,73.39,65.28,78.45,39.13,71.43,76.58,72.52,58.97],"cancel_series":[103.0,5.94,130.0,null,null,2.68,11.11,3.33,6.12,0.0,1.77,2.24,5.65],"ruptura_series":[null,null,null,null,null,2.75,1.39,2.59,9.78,95.0,1.8,0.0,4.27],"atraso_series":[12.5,9.47,5.26,8.75,99.0,2.75,4.17,1.72,28.26,2.86,0.9,1.53,5.13],"tempo_inicio_series":[null,null,null,4.2,4.05,4.37,4.67,3.49,11.88,4.05,4.56,4.53,6.4]},{"nome":"V120 - Rua Doutor Bulhoes","cidade":"RIO DE JANEIRO","regional":"Luciana","pedidos":1259,"sla":62.65,"nsu":69.51,"ruptura":3.66,"cancel":1.2,"atraso":1.22,"tempo_inicio":3.68,"score":5.3,"trend":"↓","sla_series":[69.16,76.15,70.91,78.26,74.55,72.36,69.64,78.13,32.69,61.45,67.02,71.55,62.65],"nsu_series":[73.33,75.96,75.0,81.65,83.96,68.1,76.92,null,30.61,65.0,60.22,79.46,69.51],"cancel_series":[1.87,4.59,1.82,null,null,5.69,7.14,null,5.77,3.61,1.06,3.45,1.2],"ruptura_series":[null,null,null,null,null,8.62,7.69,null,2.04,10.0,8.6,13.39,3.66],"atraso_series":[6.67,4.81,1.85,4.59,4.72,4.31,5.77,null,16.33,2.5,7.53,7.14,1.22],"tempo_inicio_series":[null,null,null,3.73,3.07,4.04,3.88,3.47,8.47,4.8,5.19,4.0,3.68]},{"nome":"Drogaria Venancio V145 - Campos - Centro","cidade":"CAMPOS DOS GOYTACAZES","regional":"Marcio","pedidos":1254,"sla":59.41,"nsu":59.57,"ruptura":4.26,"cancel":6.93,"atraso":0.0,"tempo_inicio":4.43,"score":8.7,"trend":"↓","sla_series":[58.06,60.5,63.16,62.38,61.11,65.91,61.8,51.96,65.22,60.71,62.39,66.67,59.41],"nsu_series":[72.81,61.06,73.33,67.71,61.36,64.37,65.52,55.32,70.59,58.33,60.55,64.15,59.57],"cancel_series":[8.06,null,5.26,null,null,1.14,2.25,7.84,145.0,3.57,1.8,1.85,6.93],"ruptura_series":[null,null,null,null,null,2.3,6.9,3.19,5.88,7.41,7.34,5.66,4.26],"atraso_series":[2.63,5.31,3.33,3.13,9.09,4.6,8.05,9.57,147.0,93.0,0.92,0.0,0.0],"tempo_inicio_series":[null,null,null,4.42,5.89,4.87,5.15,6.89,5.06,5.86,5.02,5.02,4.43]},{"nome":"Drogaria Venancio V122 - Campo Grande","cidade":"RIO DE JANEIRO","regional":"Luciana","pedidos":1247,"sla":68.18,"nsu":67.65,"ruptura":3.92,"cancel":7.27,"atraso":0.98,"tempo_inicio":6.91,"score":4.3,"trend":"↑","sla_series":[77.48,70.1,74.44,64.08,67.01,65.81,76.47,72.07,64.71,71.43,58.57,60.0,68.18],"nsu_series":[79.82,80.22,69.41,68.09,69.15,67.31,70.37,71.84,77.78,76.71,68.89,69.91,67.65],"cancel_series":[1.8,6.19,5.56,null,null,11.11,4.71,7.21,7.35,5.19,8.16,9.6,7.27],"ruptura_series":[null,null,null,null,null,5.77,4.94,6.8,0.0,6.85,2.22,0.88,3.92],"atraso_series":[2.75,6.59,4.71,10.64,5.32,4.81,3.7,5.83,6.35,6.85,8.14,6.19,0.98],"tempo_inicio_series":[null,null,null,5.07,4.87,5.09,4.16,4.66,3.47,3.71,5.18,4.83,6.91]},{"nome":"V138 - Drogaria Venancio - Av Visco de Pirajá 174","cidade":"RIO DE JANEIRO","regional":"Marcio","pedidos":1242,"sla":72.62,"nsu":56.25,"ruptura":5.0,"cancel":4.76,"atraso":11.25,"tempo_inicio":7.27,"score":5.3,"trend":"↑","sla_series":[66.07,76.7,71.6,67.0,64.63,56.52,69.12,70.83,67.31,69.42,68.42,67.46,72.62],"nsu_series":[70.0,70.53,60.49,64.21,58.9,66.67,66.67,null,58.82,58.47,61.04,56.88,56.25],"cancel_series":[1.79,7.77,0.0,null,null,8.7,2.94,null,1.92,2.48,3.75,5.33,4.76],"ruptura_series":[null,null,null,null,null,3.17,13.64,null,1.96,5.08,7.79,8.13,5.0],"atraso_series":[6.36,10.53,18.52,8.42,9.59,4.76,3.03,null,3.92,7.63,10.39,16.25,11.25],"tempo_inicio_series":[null,null,null,5.18,5.6,7.05,4.7,3.15,6.47,6.25,6.35,6.36,7.27]},{"nome":"V19 - Av. 28 de Setembro, 216","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":1241,"sla":55.34,"nsu":57.45,"ruptura":6.38,"cancel":8.74,"atraso":21.28,"tempo_inicio":7.31,"score":12.4,"trend":"↓","sla_series":[67.54,71.77,69.81,71.29,59.8,68.0,68.48,75.9,64.52,70.65,71.68,70.41,55.34],"nsu_series":[68.14,70.25,67.92,67.33,56.44,58.33,68.13,null,50.0,63.74,70.8,75.51,57.45],"cancel_series":[88.0,2.42,0.0,null,null,4.0,1.09,null,0.0,109.0,4.24,0.0,8.74],"ruptura_series":[null,null,null,null,null,8.33,6.59,null,3.23,7.69,7.96,10.2,6.38],"atraso_series":[11.5,10.74,6.6,13.86,8.91,8.33,6.59,null,12.9,8.79,9.73,10.2,21.28],"tempo_inicio_series":[null,null,null,4.39,5.76,5.72,4.85,3.19,6.88,5.18,4.2,4.77,7.31]},{"nome":"Drogaria Venancio V96 - Rua Dom Helder Camara 7371","cidade":"RIO DE JANEIRO","regional":"Daygine","pedidos":1174,"sla":79.31,"nsu":55.56,"ruptura":5.56,"cancel":6.9,"atraso":7.41,"tempo_inicio":6.07,"score":4.9,"trend":"↓","sla_series":[89.33,90.72,88.46,88.24,84.0,84.85,92.86,91.51,30.99,75.73,85.26,88.73,79.31],"nsu_series":[63.01,69.57,76.32,76.04,79.79,69.84,75.9,80.19,25.37,62.89,63.29,62.14,55.56],"cancel_series":[2.67,5.15,2.56,null,null,4.55,1.19,0.0,5.63,5.83,4.82,1.41,6.9],"ruptura_series":[null,null,null,null,null,7.94,8.43,2.83,14.93,9.28,2.53,4.29,5.56],"atraso_series":[6.85,null,132.0,4.17,4.26,3.17,0.0,1.89,22.39,7.22,8.86,7.86,7.41],"tempo_inicio_series":[null,null,null,5.06,3.49,4.91,3.94,3.53,19.4,6.56,4.89,5.03,6.07]},{"nome":"V555 - Av. 28 de Setembro 304","cidade":"RIO DE JANEIRO","regional":"Outros","pedidos":1171,"sla":63.41,"nsu":74.03,"ruptura":6.49,"cancel":6.1,"atraso":6.49,"tempo_inicio":4.37,"score":6.6,"trend":"↓","sla_series":[68.32,75.0,69.05,70.19,77.95,78.5,75.25,76.84,45.16,70.0,74.19,78.35,63.41],"nsu_series":[70.1,71.3,75.0,75.25,74.6,76.19,74.75,null,26.32,75.95,72.73,77.08,74.03],"cancel_series":[3.96,4.17,0.0,null,null,1.87,1.98,null,8.06,125.0,2.22,1.03,6.1],"ruptura_series":[null,null,null,null,null,4.76,5.05,null,10.53,10.13,6.82,3.13,6.49],"atraso_series":[7.22,10.43,3.57,7.92,2.38,6.67,6.06,null,17.54,5.06,2.27,1.04,6.49],"tempo_inicio_series":[null,null,null,3.83,3.96,4.31,3.68,2.81,8.82,4.29,3.36,3.22,4.37]},{"nome":"Drogaria Venancio V102 - Av. das Américas 13900","cidade":"RIO DE JANEIRO","regional":"Edinaldo","pedidos":1153,"sla":65.0,"nsu":74.03,"ruptura":0.0,"cancel":3.75,"atraso":5.19,"tempo_inicio":4.5,"score":4.3,"trend":"↑","sla_series":[64.29,66.37,68.54,72.22,71.43,75.49,64.29,75.22,70.51,68.75,58.18,57.45,65.0],"nsu_series":[77.42,72.9,73.49,76.14,77.89,72.16,69.9,83.02,61.84,75.0,61.73,67.82,74.03],"cancel_series":[5.1,5.31,6.74,null,null,4.9,8.04,6.19,2.56,6.25,3.57,7.45,3.75],"ruptura_series":[null,null,null,null,null,5.15,6.8,1.89,2.63,6.67,3.7,1.15,0.0],"atraso_series":[7.53,8.41,3.61,10.23,14.74,16.49,13.59,9.43,9.21,3.33,8.64,8.05,5.19],"tempo_inicio_series":[null,null,null,4.55,5.92,5.72,4.92,3.8,5.39,4.62,4.22,4.87,4.5]},{"nome":"V125- Angra dos Reis","cidade":"ANGRA DOS REIS","regional":"Luciana","pedidos":1151,"sla":78.48,"nsu":78.95,"ruptura":2.63,"cancel":3.8,"atraso":2.63,"tempo_inicio":3.07,"score":1.2,"trend":"↑","sla_series":[72.41,73.96,78.95,69.09,73.53,77.98,71.84,73.96,60.78,79.78,77.97,76.64,78.48],"nsu_series":[85.71,77.66,80.0,76.19,72.0,78.5,76.29,null,62.0,81.4,79.03,81.73,78.95],"cancel_series":[3.45,null,0.0,null,null,1.83,5.83,null,1.96,3.37,6.06,2.8,3.8],"ruptura_series":[null,null,null,null,null,3.74,6.19,null,14.0,5.81,4.84,3.85,2.63],"atraso_series":[5.95,4.26,3.16,4.76,2.0,6.54,3.09,null,10.0,2.33,0.0,0.0,2.63],"tempo_inicio_series":[null,null,null,3.53,3.81,3.24,3.24,2.54,5.8,2.95,3.34,3.27,3.07]},{"nome":"V14 - Taquara","cidade":"RIO DE JANEIRO","regional":"Juan","pedidos":1105,"sla":44.94,"nsu":50.0,"ruptura":6.1,"cancel":7.87,"atraso":18.29,"tempo_inicio":8.28,"score":17.6,"trend":"↓","sla_series":[73.96,74.07,76.54,70.37,59.52,74.6,81.67,79.57,61.43,70.31,63.76,58.82,44.94],"nsu_series":[78.26,79.22,71.6,74.67,56.25,68.25,76.67,null,49.28,63.49,56.6,56.9,50.0],"cancel_series":[4.17,4.94,0.0,null,null,0.0,0.0,null,143.0,1.56,4.79,2.52,7.87],"ruptura_series":[null,null,null,null,null,6.35,5.0,null,4.35,12.7,10.69,12.07,6.1],"atraso_series":[14.13,10.39,3.7,10.67,10.0,4.76,0.0,null,14.49,0.0,7.55,7.76,18.29],"tempo_inicio_series":[null,null,null,3.73,5.14,3.94,3.23,3.99,6.75,4.65,5.38,5.86,8.28]},{"nome":"V137 - Drogaria Venancio - Av Rui Barbosa 143","cidade":"NITEROI","regional":"Marcio","pedidos":1093,"sla":77.48,"nsu":83.65,"ruptura":4.81,"cancel":6.31,"atraso":6.73,"tempo_inicio":3.14,"score":2.2,"trend":"↑","sla_series":[58.43,59.15,73.83,81.73,73.91,66.0,61.76,69.23,61.11,62.86,62.34,60.58,77.48],"nsu_series":[62.82,60.0,69.0,79.81,63.64,71.28,69.39,null,60.0,54.29,55.13,52.88,83.65],"cancel_series":[12.36,8.45,6.54,null,null,6.0,3.92,null,2.78,0.0,2.5,0.0,6.31],"ruptura_series":[null,null,null,null,null,8.51,11.22,null,5.71,8.57,5.13,3.85,4.81],"atraso_series":[7.69,null,6.0,2.88,4.55,7.45,14.29,null,8.57,4.29,3.85,5.77,6.73],"tempo_inicio_series":[null,null,null,3.15,4.68,4.26,4.73,4.33,5.9,5.51,5.22,5.24,3.14]},{"nome":"V28 - Voluntários da Pátria 128","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":1083,"sla":75.95,"nsu":76.39,"ruptura":6.94,"cancel":8.86,"atraso":13.89,"tempo_inicio":3.8,"score":3.4,"trend":"→","sla_series":[75.51,81.08,84.27,84.27,81.93,80.46,82.86,78.41,56.14,82.0,73.68,76.54,75.95],"nsu_series":[74.74,74.07,71.91,80.68,72.29,78.16,78.26,null,46.43,87.5,74.03,78.21,76.39],"cancel_series":[3.06,2.7,0.0,null,null,0.0,1.43,null,1.75,4.0,2.53,3.7,8.86],"ruptura_series":[null,null,null,null,null,5.75,2.9,null,8.93,5.21,10.39,8.97,6.94],"atraso_series":[9.47,null,3.37,4.55,6.02,6.9,8.7,null,8.93,5.21,5.19,3.85,13.89],"tempo_inicio_series":[null,null,null,3.22,4.14,3.54,3.61,2.88,7.05,2.63,3.59,3.54,3.8]},{"nome":"Grajaú - V134","cidade":"RIO DE JANEIRO","regional":"Marcio","pedidos":1052,"sla":64.0,"nsu":71.91,"ruptura":4.49,"cancel":11.0,"atraso":7.87,"tempo_inicio":4.33,"score":6.8,"trend":"↓","sla_series":[79.25,81.52,77.68,null,84.0,70.27,80.95,78.13,47.83,76.84,null,71.19,64.0],"nsu_series":[76.7,79.55,68.47,null,79.38,75.0,77.32,null,37.88,86.36,null,67.24,71.91],"cancel_series":[2.83,4.35,89.0,null,null,6.31,7.62,null,4.35,7.37,null,1.69,11.0],"ruptura_series":[null,null,null,null,null,7.69,6.19,null,4.55,9.09,null,9.48,4.49],"atraso_series":[5.83,2.27,1.8,null,5.15,4.81,6.19,null,15.15,4.55,null,5.17,7.87],"tempo_inicio_series":[null,null,null,null,3.65,3.64,3.68,2.84,6.7,3.05,null,4.34,4.33]},{"nome":"Drogaria Venancio V42 - Bonsucesso","cidade":"RIO DE JANEIRO","regional":"Raphaela","pedidos":1039,"sla":51.76,"nsu":65.82,"ruptura":2.53,"cancel":7.06,"atraso":10.13,"tempo_inicio":5.62,"score":10.2,"trend":"↑","sla_series":[57.41,50.0,70.27,59.15,62.89,62.65,68.89,59.8,51.67,57.84,43.48,47.42,51.76],"nsu_series":[67.71,53.76,70.0,62.5,62.11,54.32,67.44,59.18,69.39,55.56,42.5,46.07,65.82],"cancel_series":[11.11,7.0,5.41,null,null,2.41,4.44,3.92,18.33,2.94,16.67,8.25,7.06],"ruptura_series":[null,null,null,null,null,6.17,6.98,7.14,2.04,9.09,7.5,4.49,2.53],"atraso_series":[10.42,8.6,4.29,3.13,8.42,7.41,3.49,6.12,4.08,5.05,5.0,2.25,10.13],"tempo_inicio_series":[null,null,null,4.77,5.27,5.77,5.17,5.42,4.44,5.43,7.1,6.65,5.62]},{"nome":"V46 Praça das Nações","cidade":"RIO DE JANEIRO","regional":"Raphaela","pedidos":1032,"sla":56.73,"nsu":69.77,"ruptura":10.47,"cancel":17.31,"atraso":10.47,"tempo_inicio":4.97,"score":11.6,"trend":"↓","sla_series":[69.62,58.33,72.97,63.24,63.64,60.27,62.12,56.0,55.45,39.86,59.21,58.45,56.73],"nsu_series":[81.94,60.0,60.56,57.38,61.64,63.38,71.19,null,45.71,73.68,60.17,61.21,69.77],"cancel_series":[8.86,8.33,null,null,null,2.74,10.61,null,4.55,44.93,15.11,18.31,17.31],"ruptura_series":[null,null,null,null,null,11.27,3.39,null,4.76,11.84,14.41,12.93,10.47],"atraso_series":[12.5,5.45,null,6.56,4.11,2.82,3.39,null,12.38,3.95,2.54,2.59,10.47],"tempo_inicio_series":[null,null,null,5.23,5.45,5.37,5.29,5.31,7.18,4.41,5.55,5.64,4.97]},{"nome":"Madureira - V36","cidade":"RIO DE JANEIRO","regional":"Raphaela","pedidos":1020,"sla":67.71,"nsu":70.65,"ruptura":9.78,"cancel":4.17,"atraso":6.52,"tempo_inicio":4.32,"score":5.5,"trend":"↑","sla_series":[61.73,79.49,76.09,59.15,59.74,69.23,71.11,64.0,45.95,57.69,60.14,60.4,67.71],"nsu_series":[71.79,64.47,66.29,70.77,67.12,71.62,68.29,63.27,35.29,69.86,54.29,57.47,70.65],"cancel_series":[3.7,2.56,3.26,null,null,5.13,8.89,2.0,8.11,6.41,12.5,13.86,4.17],"ruptura_series":[null,null,null,null,null,4.05,0.0,12.24,17.65,9.59,7.14,9.2,9.78],"atraso_series":[16.67,9.21,6.74,27.69,9.59,10.81,4.88,5.1,17.65,2.74,1.43,2.3,6.52],"tempo_inicio_series":[null,null,null,5.01,4.76,4.82,4.25,6.36,9.2,5.32,5.31,5.45,4.32]},{"nome":"V131 - Drogaria Venancio - São Clemente","cidade":"RIO DE JANEIRO","regional":"Marcio","pedidos":1013,"sla":58.33,"nsu":79.01,"ruptura":2.47,"cancel":15.63,"atraso":11.11,"tempo_inicio":4.24,"score":9.2,"trend":"↓","sla_series":[70.93,75.0,76.54,67.92,70.13,75.0,81.16,64.86,66.67,64.41,76.59,76.99,58.33],"nsu_series":[77.5,81.71,65.82,67.78,77.14,79.66,86.76,null,68.75,69.39,76.59,79.44,79.01],"cancel_series":[6.98,6.82,2.47,null,null,1.67,1.45,null,5.88,16.95,2.13,5.31,15.63],"ruptura_series":[null,null,null,null,null,6.78,2.94,null,0.0,12.24,8.7,7.48,2.47],"atraso_series":[3.75,7.32,8.86,5.56,8.57,10.17,1.47,null,0.0,2.04,0.0,0.93,11.11],"tempo_inicio_series":[null,null,null,4.21,3.6,3.12,2.8,2.19,4.09,4.23,3.17,3.37,4.24]},{"nome":"V89 - Av. das Américas 14811","cidade":"RIO DE JANEIRO","regional":"Daygine","pedidos":1009,"sla":82.5,"nsu":77.39,"ruptura":3.48,"cancel":4.17,"atraso":2.61,"tempo_inicio":4.21,"score":1.5,"trend":"↑","sla_series":[null,null,null,63.39,80.0,70.94,76.15,65.63,62.63,64.18,71.3,70.75,82.5],"nsu_series":[null,null,null,63.46,68.47,62.61,78.43,null,40.0,60.32,67.59,68.27,77.39],"cancel_series":[null,null,null,null,null,1.71,6.42,null,4.04,5.97,2.7,1.89,4.17],"ruptura_series":[null,null,null,null,null,3.48,8.82,null,4.21,1.59,2.78,1.92,3.48],"atraso_series":[null,null,null,3.85,9.01,8.7,3.92,null,4.21,4.76,5.56,5.77,2.61],"tempo_inicio_series":[null,null,null,5.06,6.68,5.5,3.95,6.1,8.78,4.85,5.64,5.81,4.21]},{"nome":"Drogaria Venancio V111 - Jacarepaguá","cidade":"RIO DE JANEIRO","regional":"Edinaldo","pedidos":997,"sla":84.71,"nsu":79.27,"ruptura":0.0,"cancel":3.53,"atraso":7.32,"tempo_inicio":2.61,"score":0.9,"trend":"↑","sla_series":[74.29,80.72,85.94,70.59,81.25,85.14,81.48,77.78,53.85,83.61,85.71,82.18,84.71],"nsu_series":[77.94,75.31,80.95,82.81,77.42,87.32,80.77,null,38.1,76.67,75.78,75.0,79.27],"cancel_series":[2.86,2.41,1.56,null,null,4.05,3.7,null,3.08,1.64,3.03,0.99,3.53],"ruptura_series":[null,null,null,null,null,2.82,6.41,null,1.59,3.33,5.47,6.0,0.0],"atraso_series":[2.94,6.17,9.52,6.25,1.61,2.82,10.26,null,17.46,5.0,6.25,5.0,7.32],"tempo_inicio_series":[null,null,null,2.75,3.4,2.35,3.66,3.13,8.26,3.38,3.32,3.4,2.61]},{"nome":"V86 - Rua República Árabe da Síria 515","cidade":"RIO DE JANEIRO","regional":"Daygine","pedidos":981,"sla":85.42,"nsu":68.89,"ruptura":4.44,"cancel":6.25,"atraso":2.22,"tempo_inicio":4.72,"score":1.9,"trend":"↑","sla_series":[80.0,74.03,80.41,83.52,73.44,76.92,83.08,83.53,88.46,78.05,84.44,82.69,85.42],"nsu_series":[70.13,65.28,66.67,77.65,68.85,57.14,71.67,null,62.75,68.75,63.16,62.75,68.89],"cancel_series":[3.75,6.49,7.22,null,null,1.28,7.69,null,1.92,2.44,3.39,1.92,6.25],"ruptura_series":[null,null,null,null,null,3.9,6.67,null,5.88,5.0,8.77,7.84,4.44],"atraso_series":[2.6,5.56,2.22,2.35,0.0,2.6,1.67,null,7.84,2.5,3.51,2.94,2.22],"tempo_inicio_series":[null,null,null,3.04,4.29,5.12,3.59,3.56,5.55,4.41,4.97,4.68,4.72]},{"nome":"V58 - Estrada do Galeão, 2039","cidade":"RIO DE JANEIRO","regional":"Rodrigo","pedidos":946,"sla":77.59,"nsu":72.57,"ruptura":3.54,"cancel":2.59,"atraso":3.54,"tempo_inicio":4.74,"score":1.3,"trend":"↑","sla_series":[null,null,null,83.65,74.39,81.71,84.16,78.18,54.35,79.22,71.43,73.55,77.59],"nsu_series":[null,null,null,72.73,78.95,74.68,80.0,79.61,72.5,78.38,65.49,65.0,72.57],"cancel_series":[null,null,null,null,null,3.66,0.99,6.36,13.04,3.9,0.7,0.83,2.59],"ruptura_series":[null,null,null,null,null,8.86,7.0,5.83,5.0,6.76,4.93,6.67,3.54],"atraso_series":[null,null,null,4.04,5.26,6.33,4.0,4.85,5.0,5.41,2.82,2.5,3.54],"tempo_inicio_series":[null,null,null,4.66,3.56,6.32,2.95,4.85,3.9,3.25,4.92,5.03,4.74]},{"nome":"V136 - Drogaria Venancio Rua Conde de Bonfim - Tijuca","cidade":"RIO DE JANEIRO","regional":"Marcio","pedidos":936,"sla":56.64,"nsu":63.37,"ruptura":6.93,"cancel":10.62,"atraso":11.88,"tempo_inicio":4.8,"score":10.4,"trend":"↓","sla_series":[78.38,69.49,80.95,69.88,82.8,73.26,85.14,75.26,75.76,74.16,null,75.0,56.64],"nsu_series":[82.43,72.22,79.03,75.64,71.74,65.0,78.87,79.79,87.88,72.73,null,85.32,63.37],"cancel_series":[0.0,8.47,1.59,null,null,6.98,4.05,3.09,0.0,112.0,null,9.17,10.62],"ruptura_series":[null,null,null,null,null,16.25,12.68,10.64,3.03,7.95,null,7.34,6.93],"atraso_series":[135.0,3.7,0.0,1.28,2.17,3.75,2.82,3.19,0.0,9.09,null,5.5,11.88],"tempo_inicio_series":[null,null,null,3.39,3.67,3.95,3.18,3.52,2.83,3.91,null,3.0,4.8]},{"nome":"V65 - Rua Siqueira Campos 107","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":918,"sla":58.18,"nsu":64.71,"ruptura":3.92,"cancel":7.27,"atraso":15.69,"tempo_inicio":5.44,"score":8.6,"trend":"↓","sla_series":[53.1,61.32,59.79,45.71,53.76,55.56,62.22,71.05,49.33,63.24,69.23,67.5,58.18],"nsu_series":[50.0,55.1,54.95,55.34,53.25,60.0,56.32,null,34.25,57.38,53.85,52.78,64.71],"cancel_series":[6.19,7.55,6.19,null,null,5.56,3.33,null,2.67,10.29,18.75,10.0,7.27],"ruptura_series":[null,null,null,null,null,15.29,12.64,null,10.96,11.48,23.08,8.33,3.92],"atraso_series":[7.55,15.31,6.59,7.77,3.9,4.71,1.15,null,12.33,9.84,0.0,8.33,15.69],"tempo_inicio_series":[null,null,null,6.86,6.13,6.09,5.55,4.63,9.38,5.33,7.25,7.58,5.44]},{"nome":"Drogaria Venancio V110 - Rua Marechal Deodoro 153 Loja 102","cidade":"PETROPOLIS","regional":"Edinaldo","pedidos":916,"sla":57.94,"nsu":64.44,"ruptura":5.56,"cancel":15.89,"atraso":6.67,"tempo_inicio":5.19,"score":9.9,"trend":"↓","sla_series":[59.38,61.9,66.13,60.49,62.34,null,61.43,65.22,54.41,63.64,61.54,61.22,57.94],"nsu_series":[56.45,65.85,73.21,70.13,61.33,null,63.64,null,33.85,63.51,56.18,56.99,64.44],"cancel_series":[3.13,2.38,9.68,null,null,null,5.71,null,4.41,3.9,4.3,5.1,15.89],"ruptura_series":[null,null,null,null,null,null,10.61,null,12.31,5.41,6.74,6.45,5.56],"atraso_series":[12.9,4.88,1.79,7.79,5.33,null,7.58,null,16.92,0.0,5.62,6.45,6.67],"tempo_inicio_series":[null,null,null,4.59,5.56,null,4.88,4.56,8.12,4.79,5.3,5.3,5.19]},{"nome":"Drogaria Venancio V94 - Rua do Imperador 299","cidade":"PETROPOLIS","regional":"Daygine","pedidos":903,"sla":68.06,"nsu":85.29,"ruptura":2.94,"cancel":5.56,"atraso":1.47,"tempo_inicio":3.11,"score":3.9,"trend":"↑","sla_series":[70.15,66.67,79.66,63.49,78.26,73.61,68.85,63.53,47.62,71.05,68.75,63.16,68.06],"nsu_series":[81.25,78.31,86.21,73.33,85.07,71.01,62.71,null,54.76,78.38,69.77,72.22,85.29],"cancel_series":[4.48,4.6,1.69,null,null,4.17,3.28,null,0.0,2.63,3.37,5.26,5.56],"ruptura_series":[null,null,null,null,null,10.14,11.86,null,16.67,14.86,2.33,3.33,2.94],"atraso_series":[4.69,4.82,0.0,6.67,5.97,4.35,5.08,null,9.52,4.05,1.16,0.0,1.47],"tempo_inicio_series":[null,null,null,4.28,2.57,3.76,4.56,4.02,5.92,3.31,3.59,4.11,3.11]},{"nome":"V11 - Av N. Sra. de Copacabana, 980","cidade":"RIO DE JANEIRO","regional":"Juan","pedidos":902,"sla":45.45,"nsu":51.22,"ruptura":6.1,"cancel":17.17,"atraso":18.29,"tempo_inicio":7.34,"score":18.5,"trend":"→","sla_series":[35.21,54.32,57.14,54.55,62.2,null,61.02,56.52,50.67,52.86,44.74,44.83,45.45],"nsu_series":[51.52,49.33,54.02,51.43,70.0,null,69.81,null,30.14,53.38,42.11,41.51,51.22],"cancel_series":[7.04,7.41,4.4,null,null,null,10.17,null,2.67,5.0,12.0,8.62,17.17],"ruptura_series":[null,null,null,null,null,null,22.64,null,8.22,9.77,11.36,9.43,6.1],"atraso_series":[7.58,4.0,12.64,12.86,10.0,null,3.77,null,27.4,7.52,26.32,22.64,18.29],"tempo_inicio_series":[null,null,null,7.28,4.74,null,5.42,7.35,9.5,5.82,8.99,9.07,7.34]},{"nome":"V60 - Nova Iguaçu","cidade":"NOVA IGUACU","regional":"Rodrigo","pedidos":895,"sla":75.0,"nsu":77.94,"ruptura":2.94,"cancel":10.53,"atraso":5.88,"tempo_inicio":3.35,"score":2.5,"trend":"↓","sla_series":[71.91,71.03,93.1,82.76,81.82,52.38,71.88,71.43,62.22,90.2,77.14,84.29,75.0],"nsu_series":[73.88,60.74,82.14,65.52,70.45,54.05,45.16,null,80.49,88.0,72.37,80.3,77.94],"cancel_series":[8.24,6.9,3.45,null,null,11.9,3.13,null,8.89,1.96,5.0,5.71,10.53],"ruptura_series":[null,null,null,null,null,8.11,9.68,null,9.76,2.0,2.63,0.0,2.94],"atraso_series":[12.24,11.85,3.57,0.0,2.27,5.41,3.23,null,7.32,2.0,7.89,9.09,5.88],"tempo_inicio_series":[null,null,null,4.14,3.75,4.88,5.07,3.04,4.91,2.99,3.56,3.2,3.35]},{"nome":"Drogaria Venancio V160 - Ingá","cidade":"RIO DE JANEIRO","regional":"Vanderson","pedidos":892,"sla":81.25,"nsu":81.91,"ruptura":3.19,"cancel":2.08,"atraso":6.38,"tempo_inicio":3.1,"score":1.3,"trend":"↑","sla_series":[81.02,76.53,80.65,83.61,73.68,80.6,84.62,81.94,null,55.77,null,69.61,81.25],"nsu_series":[73.13,63.54,70.49,80.0,70.67,73.85,89.23,null,null,65.79,null,69.07,81.91],"cancel_series":[2.19,null,1.61,null,null,2.99,0.0,null,null,26.92,null,4.9,2.08],"ruptura_series":[null,null,null,null,null,0.0,0.0,null,null,11.84,null,9.28,3.19],"atraso_series":[16.42,3.13,3.28,1.67,0.0,7.69,1.54,null,null,2.63,null,5.15,6.38],"tempo_inicio_series":[null,null,null,4.11,3.8,4.11,2.56,3.42,null,3.93,null,4.05,3.1]},{"nome":"V117 - Av. das Américas, 14.809","cidade":"RIO DE JANEIRO","regional":"Luciana","pedidos":882,"sla":89.22,"nsu":86.6,"ruptura":4.12,"cancel":4.9,"atraso":4.12,"tempo_inicio":2.71,"score":1.8,"trend":"↑","sla_series":[79.45,83.33,69.49,80.3,82.61,69.35,79.49,71.95,71.11,90.0,86.75,84.44,89.22],"nsu_series":[81.94,71.7,72.73,85.94,84.62,72.13,81.33,null,68.89,74.0,83.33,78.16,86.6],"cancel_series":[137.0,1.85,6.78,null,null,1.61,3.85,null,0.0,0.0,2.33,3.33,4.9],"ruptura_series":[null,null,null,null,null,9.84,8.0,null,2.22,4.0,4.76,3.45,4.12],"atraso_series":[5.56,9.43,3.64,3.13,3.08,8.2,5.33,null,11.11,6.0,4.76,3.45,4.12],"tempo_inicio_series":[null,null,null,2.9,2.88,3.92,2.81,3.22,4.34,3.13,3.45,3.54,2.71]},{"nome":"Copacabana - V38","cidade":"RIO DE JANEIRO","regional":"Raphaela","pedidos":844,"sla":36.23,"nsu":41.67,"ruptura":3.33,"cancel":13.04,"atraso":8.33,"tempo_inicio":7.24,"score":22.4,"trend":"↓","sla_series":[30.95,20.0,35.42,41.38,20.31,17.65,32.1,38.18,38.96,32.43,42.23,40.34,36.23],"nsu_series":[44.44,30.0,32.61,54.72,31.58,21.28,32.39,null,27.78,35.94,37.31,34.82,41.67],"cancel_series":[14.29,null,4.17,null,null,7.84,12.35,null,6.49,13.51,6.94,5.88,13.04],"ruptura_series":[null,null,null,null,null,8.51,18.31,null,8.33,32.81,22.39,23.21,3.33],"atraso_series":[11.11,7.5,15.22,5.66,12.28,4.26,1.41,null,38.89,15.63,16.42,18.75,8.33],"tempo_inicio_series":[null,null,null,5.94,9.84,9.07,6.99,7.76,11.16,8.5,10.6,9.72,7.24]},{"nome":"V29 - Catete 267","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":841,"sla":74.07,"nsu":69.74,"ruptura":2.63,"cancel":6.17,"atraso":6.58,"tempo_inicio":4.55,"score":2.1,"trend":"→","sla_series":[61.76,64.15,56.14,70.77,71.01,66.15,76.27,60.0,43.18,70.93,72.15,74.7,74.07],"nsu_series":[52.46,58.82,45.45,67.74,57.58,65.08,66.67,null,38.64,69.05,65.82,69.14,69.74],"cancel_series":[10.29,3.77,3.51,null,null,3.08,3.39,null,0.0,2.33,5.95,2.41,6.17],"ruptura_series":[null,null,null,null,null,4.76,7.02,null,15.91,13.1,12.66,13.58,2.63],"atraso_series":[6.56,1.96,3.64,1.61,1.52,7.94,5.26,null,15.91,7.14,8.86,6.17,6.58],"tempo_inicio_series":[null,null,null,4.22,4.96,5.41,4.65,7.34,10.92,4.91,4.29,4.58,4.55]},{"nome":"V112 - Drogaria Venancio - Av das Américas 6441","cidade":"RIO DE JANEIRO","regional":"Edinaldo","pedidos":837,"sla":66.67,"nsu":66.23,"ruptura":7.79,"cancel":4.94,"atraso":0.0,"tempo_inicio":5.26,"score":5.2,"trend":"↓","sla_series":[64.21,64.47,58.44,57.53,58.11,75.64,66.67,66.67,43.33,76.56,null,69.74,66.67],"nsu_series":[77.27,65.75,61.11,68.57,58.82,65.33,68.75,null,55.17,61.9,null,57.89,66.23],"cancel_series":[7.37,3.95,6.49,null,null,3.85,3.03,null,3.33,1.56,null,0.0,4.94],"ruptura_series":[null,null,null,null,null,6.67,4.69,null,3.45,6.35,null,3.95,7.79],"atraso_series":[9.09,6.85,2.78,10.0,11.76,13.33,12.5,null,10.34,1.59,null,0.0,0.0],"tempo_inicio_series":[null,null,null,4.46,5.66,4.57,3.92,4.83,6.68,4.88,null,5.03,5.26]},{"nome":"V127 - Rua São Francisco Xavier","cidade":"RIO DE JANEIRO","regional":"Luciana","pedidos":837,"sla":82.22,"nsu":91.95,"ruptura":5.75,"cancel":3.33,"atraso":3.45,"tempo_inicio":2.4,"score":1.8,"trend":"↑","sla_series":[90.77,73.85,80.65,87.88,79.31,85.71,83.61,83.33,55.32,80.0,73.42,70.83,82.22],"nsu_series":[90.63,74.19,72.58,83.08,86.79,84.21,78.33,null,51.22,86.21,73.42,75.71,91.95],"cancel_series":[1.54,4.62,0.0,null,null,1.3,1.64,null,12.77,3.33,4.82,2.78,3.33],"ruptura_series":[null,null,null,null,null,9.21,3.33,null,7.32,3.45,5.06,5.71,5.75],"atraso_series":[1.56,4.84,46181.0,1.54,5.66,5.26,8.33,null,24.39,5.17,5.06,5.71,3.45],"tempo_inicio_series":[null,null,null,2.78,2.85,2.97,3.31,2.44,6.94,2.82,3.54,3.65,2.4]},{"nome":"V66- Bangu","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":836,"sla":65.75,"nsu":93.85,"ruptura":6.15,"cancel":10.96,"atraso":4.62,"tempo_inicio":2.15,"score":6.3,"trend":"↓","sla_series":[69.51,68.66,81.61,71.76,78.02,72.29,57.81,62.96,41.98,76.74,null,76.92,65.75],"nsu_series":[81.25,77.78,80.0,85.37,83.15,86.25,68.33,null,44.16,76.74,null,86.44,93.85],"cancel_series":[2.44,5.97,2.3,null,null,3.61,6.25,null,4.94,0.0,null,9.23,10.96],"ruptura_series":[null,null,null,null,null,2.5,5.0,null,5.19,4.65,null,6.78,6.15],"atraso_series":[13.75,null,9.41,6.1,112.0,6.25,6.67,null,22.08,6.98,null,10.17,4.62],"tempo_inicio_series":[null,null,null,2.4,2.71,3.0,3.69,3.04,8.79,3.47,null,3.35,2.15]},{"nome":"V91 - Av. das Américas 3737","cidade":"RIO DE JANEIRO","regional":"Daygine","pedidos":825,"sla":68.63,"nsu":60.42,"ruptura":2.08,"cancel":5.88,"atraso":12.5,"tempo_inicio":5.71,"score":5.3,"trend":"↓","sla_series":[64.94,63.29,60.0,60.76,64.1,62.16,82.14,88.24,38.18,75.9,72.97,73.68,68.63],"nsu_series":[72.6,62.16,44.23,59.15,78.57,47.89,70.37,null,29.63,62.82,64.86,64.86,60.42],"cancel_series":[5.19,6.33,5.45,null,null,4.05,3.57,null,1.82,6.02,5.0,2.63,5.88],"ruptura_series":[null,null,null,null,null,11.27,9.26,null,10.19,8.97,5.26,10.81,2.08],"atraso_series":[12.33,10.81,3.85,2.82,4.29,1.41,7.41,null,8.33,3.85,5.41,8.11,12.5],"tempo_inicio_series":[null,null,null,5.14,4.72,6.46,7.34,4.11,8.73,5.08,5.3,6.6,5.71]},{"nome":"V45 - Rua da Conceição 79","cidade":"NITEROI","regional":"Raphaela","pedidos":816,"sla":73.58,"nsu":59.43,"ruptura":1.89,"cancel":0.0,"atraso":11.32,"tempo_inicio":5.31,"score":2.8,"trend":"↑","sla_series":[59.09,44.44,66.22,60.94,59.26,63.49,68.75,69.35,53.33,52.78,63.27,56.45,73.58],"nsu_series":[60.0,41.38,66.18,67.74,59.21,53.23,65.91,null,27.59,48.57,50.91,51.67,59.43],"cancel_series":[1.52,7.94,null,null,null,1.59,8.33,null,3.33,2.78,6.78,3.23,0.0],"ruptura_series":[null,null,null,null,null,6.45,4.55,null,0.0,4.29,5.45,10.0,1.89],"atraso_series":[10.77,15.52,5.88,9.68,7.89,6.45,4.55,null,10.34,5.71,10.91,13.33,11.32],"tempo_inicio_series":[null,null,null,4.91,5.74,5.81,4.22,4.68,9.96,6.05,7.1,7.03,5.31]},{"nome":"V44- Rua Coronel Moreira César","cidade":"NITEROI","regional":"Raphaela","pedidos":810,"sla":73.0,"nsu":67.71,"ruptura":4.17,"cancel":4.0,"atraso":5.21,"tempo_inicio":4.68,"score":2.4,"trend":"↓","sla_series":[67.44,70.97,75.0,78.26,73.77,74.51,77.97,83.33,44.19,64.38,77.27,77.65,73.0],"nsu_series":[65.0,49.15,56.0,64.06,50.85,75.0,69.64,null,30.0,55.71,64.56,58.33,67.71],"cancel_series":[6.98,4.84,3.85,null,null,5.88,5.08,null,6.98,4.11,3.66,1.18,4.0],"ruptura_series":[null,null,null,null,null,6.25,3.57,null,5.0,8.57,7.59,5.95,4.17],"atraso_series":[2.5,null,4.0,3.13,5.08,0.0,1.79,null,2.5,143.0,6.33,8.33,5.21],"tempo_inicio_series":[null,null,null,5.48,7.02,4.14,6.02,4.84,8.4,6.62,5.63,5.58,4.68]},{"nome":"Drogaria Venancio V109 - Estrada Francisco da Cruz Nunes 2314","cidade":"NITEROI","regional":"Edinaldo","pedidos":807,"sla":88.1,"nsu":81.93,"ruptura":0.0,"cancel":1.19,"atraso":6.02,"tempo_inicio":2.82,"score":0.5,"trend":"↑","sla_series":[76.84,80.88,85.19,76.47,73.77,84.21,79.69,85.53,60.24,87.72,null,82.02,88.1],"nsu_series":[81.32,84.38,81.48,82.0,73.68,83.33,81.67,null,48.15,89.09,null,80.46,81.93],"cancel_series":[4.21,5.88,0.0,null,null,5.26,6.25,null,2.41,3.51,null,2.25,1.19],"ruptura_series":[null,null,null,null,null,5.56,5.0,null,6.17,9.09,null,4.6,0.0],"atraso_series":[5.49,4.69,0.0,6.0,5.26,1.85,5.0,null,3.7,9.09,null,5.75,6.02],"tempo_inicio_series":[null,null,null,2.83,3.66,2.67,2.66,2.81,5.97,2.22,null,2.9,2.82]},{"nome":"V30 - Apiacas, 372","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":795,"sla":80.22,"nsu":85.54,"ruptura":1.2,"cancel":8.79,"atraso":1.2,"tempo_inicio":3.06,"score":1.6,"trend":"↑","sla_series":[77.19,74.24,80.7,69.57,69.23,75.0,68.89,78.57,41.18,78.87,68.85,70.67,80.22],"nsu_series":[78.18,70.97,80.7,81.03,66.15,81.03,78.57,null,36.17,87.88,68.66,70.0,85.54],"cancel_series":[3.51,null,0.0,null,null,3.33,6.67,null,7.84,7.04,2.9,6.67,8.79],"ruptura_series":[null,null,null,null,null,0.0,2.38,null,0.0,1.52,2.99,1.43,1.2],"atraso_series":[10.91,12.9,10.53,6.9,9.23,3.45,14.29,null,19.15,7.58,8.96,8.57,1.2],"tempo_inicio_series":[null,null,null,3.17,4.21,2.85,3.16,3.5,8.15,3.01,3.92,4.0,3.06]},{"nome":"V68 - Rua Barata Ribeiro 194","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":791,"sla":70.59,"nsu":56.25,"ruptura":6.25,"cancel":5.88,"atraso":6.25,"tempo_inicio":4.1,"score":6.2,"trend":"↓","sla_series":[76.77,76.4,78.57,72.73,77.0,87.64,76.52,64.52,50.0,83.78,81.25,92.86,70.59],"nsu_series":[72.34,65.91,67.65,60.81,67.01,68.97,72.07,null,33.33,83.33,81.25,76.92,56.25],"cancel_series":[5.05,null,2.86,null,null,2.25,3.48,null,6.25,2.7,12.0,7.14,5.88],"ruptura_series":[null,null,null,null,null,16.09,12.61,null,15.0,5.56,0.0,7.69,6.25],"atraso_series":[5.32,6.82,147.0,4.05,5.15,4.6,3.6,null,10.0,2.78,0.0,7.69,6.25],"tempo_inicio_series":[null,null,null,5.23,4.59,4.32,4.42,3.1,7.98,3.57,2.59,2.83,4.1]},{"nome":"V80 - Praia de Botafogo 316","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":789,"sla":70.59,"nsu":76.92,"ruptura":9.23,"cancel":4.41,"atraso":6.15,"tempo_inicio":3.59,"score":4.4,"trend":"↑","sla_series":[78.85,64.91,78.72,66.15,75.56,65.15,82.76,79.1,62.5,75.76,65.43,65.12,70.59],"nsu_series":[67.35,53.7,65.22,60.0,70.45,62.71,65.52,null,56.25,81.61,67.9,67.86,76.92],"cancel_series":[5.77,5.26,2.13,null,null,10.61,0.0,null,0.0,12.12,3.53,2.33,4.41],"ruptura_series":[null,null,null,null,null,8.47,8.62,null,9.38,10.34,4.94,7.14,9.23],"atraso_series":[2.04,5.56,0.0,10.77,4.55,10.17,1.72,null,9.38,115.0,8.64,3.57,6.15],"tempo_inicio_series":[null,null,null,5.65,4.31,6.22,5.92,4.91,5.38,3.1,5.11,5.07,3.59]},{"nome":"V18 - Recreio dos Bandeirantes","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":776,"sla":68.54,"nsu":71.43,"ruptura":5.71,"cancel":21.35,"atraso":2.86,"tempo_inicio":3.65,"score":6.7,"trend":"↓","sla_series":[68.75,70.83,75.0,48.1,62.86,71.74,86.84,55.56,38.1,64.83,77.2,75.38,68.54],"nsu_series":[75.0,71.11,74.19,71.43,84.0,74.42,78.95,null,33.33,56.06,76.71,74.6,71.43],"cancel_series":[8.33,6.25,3.13,null,null,6.52,0.0,null,0.0,8.97,3.95,3.08,21.35],"ruptura_series":[null,null,null,null,null,6.98,2.63,null,16.67,11.36,6.16,3.17,5.71],"atraso_series":[11.36,6.67,0.0,4.08,0.0,6.98,2.63,null,11.9,9.85,8.9,7.94,2.86],"tempo_inicio_series":[null,null,null,4.81,3.44,3.44,2.93,3.95,11.16,5.8,3.4,4.03,3.65]},{"nome":"Drogaria Venancio Erico Veríssimo - V22.","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":756,"sla":42.86,"nsu":57.14,"ruptura":4.08,"cancel":0.0,"atraso":4.08,"tempo_inicio":6.22,"score":14.2,"trend":"↓","sla_series":[57.14,74.6,60.61,61.76,70.69,55.0,69.12,57.89,36.0,48.28,53.85,53.13,42.86],"nsu_series":[55.74,63.49,66.15,65.67,70.18,50.85,70.77,null,21.74,65.0,59.26,62.3,57.14],"cancel_series":[3.17,0.0,1.52,null,null,1.67,4.41,null,8.0,8.05,10.0,4.69,0.0],"ruptura_series":[null,null,null,null,null,1.69,7.69,null,2.17,11.25,3.7,4.92,4.08],"atraso_series":[4.92,3.17,6.15,8.96,7.02,5.08,12.31,null,19.57,10.0,11.11,8.2,4.08],"tempo_inicio_series":[null,null,null,4.56,5.65,5.51,4.3,4.17,9.69,5.1,4.32,5.18,6.22]},{"nome":"Drogaria Venancio V149 - Aterrado","cidade":"VOLTA REDONDA","regional":"Vanderson","pedidos":691,"sla":59.81,"nsu":62.5,"ruptura":4.17,"cancel":10.28,"atraso":0.0,"tempo_inicio":5.33,"score":8.3,"trend":"↓","sla_series":[null,null,null,62.71,66.67,82.46,82.81,81.94,null,72.45,60.4,72.79,59.81],"nsu_series":[null,null,null,75.44,71.43,90.38,80.95,null,null,69.79,64.52,66.67,62.5],"cancel_series":[null,null,null,null,null,8.77,1.56,null,null,2.04,7.92,9.56,10.28],"ruptura_series":[null,null,null,null,null,0.0,12.7,null,null,7.29,13.98,12.2,4.17],"atraso_series":[null,null,null,14.04,4.76,0.0,1.59,null,null,5.21,2.15,0.81,0.0],"tempo_inicio_series":[null,null,null,4.54,4.64,3.17,3.25,3.27,null,5.71,5.19,5.22,5.33]},{"nome":"V64 - Rua Gavião Peixoto 183","cidade":"NITEROI","regional":"Rodrigo","pedidos":675,"sla":73.33,"nsu":56.67,"ruptura":6.67,"cancel":0.0,"atraso":10.0,"tempo_inicio":5.8,"score":4.5,"trend":"↓","sla_series":[82.69,85.71,90.0,84.21,84.0,72.15,70.13,73.53,36.36,65.22,73.77,74.36,73.33],"nsu_series":[65.31,71.15,88.14,74.32,85.42,64.86,52.7,null,32.56,63.41,60.66,54.05,56.67],"cancel_series":[5.77,7.14,1.67,null,null,6.33,3.9,null,2.27,10.87,7.58,5.13,0.0],"ruptura_series":[null,null,null,null,null,13.51,8.11,null,18.6,12.2,8.2,16.22,6.67],"atraso_series":[4.08,0.0,null,1.35,0.0,6.76,10.81,null,16.28,0.0,4.92,5.41,10.0],"tempo_inicio_series":[null,null,null,4.06,3.16,5.4,6.16,6.4,10.28,5.15,5.37,6.63,5.8]},{"nome":"V108 - Rua Senador Vergueiro","cidade":"RIO DE JANEIRO","regional":"Edinaldo","pedidos":674,"sla":91.03,"nsu":93.15,"ruptura":4.11,"cancel":6.41,"atraso":4.11,"tempo_inicio":2.27,"score":2.0,"trend":"↑","sla_series":[72.22,70.37,75.38,71.43,83.93,80.3,81.82,76.67,35.71,80.25,null,81.58,91.03],"nsu_series":[68.66,74.51,73.77,73.58,74.07,78.33,73.81,null,42.86,85.33,null,75.34,93.15],"cancel_series":[6.94,5.56,6.15,null,null,9.09,4.55,null,0.0,7.41,null,3.95,6.41],"ruptura_series":[null,null,null,null,null,3.33,16.67,null,7.14,6.67,null,5.48,4.11],"atraso_series":[0.0,3.92,3.28,3.77,1.85,6.67,4.76,null,0.0,133.0,null,8.22,4.11],"tempo_inicio_series":[null,null,null,3.56,3.04,3.57,3.47,2.49,6.19,2.4,null,4.14,2.27]},{"nome":"Drogaria Venancio V03 - Rua Buenos Aires 165/167","cidade":"RIO DE JANEIRO","regional":"Outros","pedidos":667,"sla":57.58,"nsu":60.32,"ruptura":9.52,"cancel":4.55,"atraso":19.05,"tempo_inicio":4.87,"score":10.8,"trend":"↓","sla_series":[59.65,60.94,76.47,60.0,61.9,77.36,72.0,56.1,48.57,61.8,56.76,59.21,57.58],"nsu_series":[67.27,62.3,71.43,71.11,67.21,78.43,87.5,null,31.43,68.24,62.86,67.69,60.32],"cancel_series":[3.51,4.69,3.92,null,null,3.77,4.0,null,0.0,4.49,12.5,14.47,4.55],"ruptura_series":[null,null,null,null,null,5.88,4.17,null,5.71,9.41,8.57,7.69,9.52],"atraso_series":[18.18,16.39,null,8.89,4.92,1.96,4.17,null,17.14,11.76,14.29,20.0,19.05],"tempo_inicio_series":[null,null,null,4.72,4.03,2.97,3.25,2.74,9.03,4.29,5.77,5.37,4.87]},{"nome":"Icaraí - V154","cidade":"NITEROI","regional":"Vanderson","pedidos":663,"sla":73.97,"nsu":78.26,"ruptura":7.25,"cancel":5.48,"atraso":7.25,"tempo_inicio":4.83,"score":3.0,"trend":"↑","sla_series":[80.45,86.67,89.13,78.0,86.84,82.22,93.18,94.0,null,72.31,100.0,68.66,73.97],"nsu_series":[82.93,73.26,83.33,86.36,91.18,74.42,90.24,null,null,71.43,100.0,57.58,78.26],"cancel_series":[7.52,4.44,8.7,null,null,4.44,6.82,null,null,3.08,0.0,1.49,5.48],"ruptura_series":[null,null,null,null,null,9.3,7.32,null,null,6.35,0.0,4.55,7.25],"atraso_series":[4.88,0.0,2.38,4.55,0.0,6.98,4.88,null,null,3.17,0.0,9.09,7.25],"tempo_inicio_series":[null,null,null,2.71,2.32,4.08,3.02,1.52,null,3.91,3.79,5.74,4.83]},{"nome":"Drogaria Venancio V13 - Rua Conde de Bonfim 40","cidade":"RIO DE JANEIRO","regional":"Juan","pedidos":662,"sla":72.58,"nsu":76.36,"ruptura":3.64,"cancel":11.29,"atraso":7.27,"tempo_inicio":3.97,"score":3.6,"trend":"↓","sla_series":[82.22,82.86,80.0,77.78,72.5,75.0,76.09,74.42,64.91,79.21,71.43,75.76,72.58],"nsu_series":[75.0,62.86,76.92,75.56,72.5,59.09,69.77,null,67.86,67.74,77.05,75.38,76.36],"cancel_series":[2.22,0.0,2.5,null,null,0.0,6.52,null,1.75,7.92,3.17,1.52,11.29],"ruptura_series":[null,null,null,null,null,9.09,4.65,null,12.5,4.3,8.2,7.69,3.64],"atraso_series":[6.82,2.86,0.0,2.22,7.5,6.82,4.65,null,7.14,4.3,3.28,1.54,7.27],"tempo_inicio_series":[null,null,null,3.57,4.3,5.29,4.09,4.47,5.34,4.29,3.5,3.93,3.97]},{"nome":"V57 - Av. Ataulfo de Paiva, 80 - Loja B","cidade":"RIO DE JANEIRO","regional":"Rodrigo","pedidos":662,"sla":61.29,"nsu":57.63,"ruptura":6.78,"cancel":4.84,"atraso":1.69,"tempo_inicio":4.98,"score":8.8,"trend":"↓","sla_series":[48.84,65.91,63.64,63.46,67.8,66.04,69.57,68.06,40.0,73.33,70.37,74.07,61.29],"nsu_series":[61.76,74.29,65.31,57.45,63.27,56.25,61.54,null,21.43,61.11,57.63,56.41,57.63],"cancel_series":[20.93,20.45,10.91,null,null,9.43,15.22,null,6.67,4.0,6.35,3.7,4.84],"ruptura_series":[null,null,null,null,null,12.5,12.82,null,17.86,5.56,5.08,7.69,6.78],"atraso_series":[5.88,8.57,0.0,8.51,6.12,2.08,2.56,null,3.57,6.94,5.08,3.85,1.69],"tempo_inicio_series":[null,null,null,5.31,4.95,5.46,4.54,4.88,13.27,4.82,4.51,5.57,4.98]},{"nome":"V21 - Ipanema","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":659,"sla":68.33,"nsu":72.73,"ruptura":5.45,"cancel":8.33,"atraso":5.45,"tempo_inicio":4.2,"score":4.9,"trend":"↑","sla_series":[64.71,80.0,74.47,54.0,65.0,60.47,77.78,73.33,22.22,72.0,71.7,67.14,68.33],"nsu_series":[74.51,62.96,80.0,63.64,63.16,53.85,76.74,null,33.33,70.83,64.66,69.12,72.73],"cancel_series":[0.0,1.82,4.26,null,null,9.3,4.44,null,16.67,4.0,2.52,2.86,8.33],"ruptura_series":[null,null,null,null,null,7.69,4.65,null,20.0,12.5,12.07,7.35,5.45],"atraso_series":[9.8,12.96,15.56,11.36,18.42,5.13,0.0,null,40.0,6.25,5.17,2.94,5.45],"tempo_inicio_series":[null,null,null,4.45,4.46,5.77,3.96,4.29,11.06,5.29,4.44,4.7,4.2]},{"nome":"V62 - Av. Nossa Sra. de Copacabana, 528","cidade":"RIO DE JANEIRO","regional":"Rodrigo","pedidos":650,"sla":71.43,"nsu":65.0,"ruptura":2.5,"cancel":4.76,"atraso":3.75,"tempo_inicio":4.91,"score":2.7,"trend":"↑","sla_series":[85.71,78.57,73.68,72.73,68.63,85.71,80.49,81.63,42.86,79.52,60.29,62.82,71.43],"nsu_series":[71.43,74.36,61.11,53.66,58.33,70.59,66.67,null,44.0,65.43,54.41,55.56,65.0],"cancel_series":[0.0,7.14,5.26,null,null,2.86,4.88,null,10.71,2.41,9.33,7.69,4.76],"ruptura_series":[null,null,null,null,null,8.82,12.82,null,20.0,2.47,8.82,9.72,2.5],"atraso_series":[2.38,2.56,5.56,0.0,4.17,8.82,7.69,null,12.0,6.17,2.94,2.78,3.75],"tempo_inicio_series":[null,null,null,5.82,5.14,5.52,4.25,3.25,8.0,5.02,6.04,5.98,4.91]},{"nome":"Centro- V155","cidade":"CABO FRIO","regional":"Vanderson","pedidos":646,"sla":81.16,"nsu":62.32,"ruptura":0.0,"cancel":0.0,"atraso":7.25,"tempo_inicio":4.56,"score":1.0,"trend":"→","sla_series":[84.62,75.47,79.49,71.43,76.47,76.92,86.84,84.38,null,83.33,78.95,81.71,81.16],"nsu_series":[66.13,68.0,75.68,75.0,64.71,79.59,88.57,null,null,74.24,65.57,69.14,62.32],"cancel_series":[4.62,5.66,5.13,null,null,5.77,7.89,null,null,0.0,3.17,1.22,0.0],"ruptura_series":[null,null,null,null,null,0.0,2.86,null,null,3.03,6.56,4.94,0.0],"atraso_series":[1.61,2.0,0.0,5.0,2.94,0.0,0.0,null,null,1.52,4.92,3.7,7.25],"tempo_inicio_series":[null,null,null,3.88,4.6,3.86,2.19,2.91,null,4.27,4.74,4.72,4.56]},{"nome":"Drogaria Venancio V92 - Estrada Francisco da Cruz Nunes 249","cidade":"NITEROI","regional":"Daygine","pedidos":633,"sla":76.47,"nsu":82.0,"ruptura":0.0,"cancel":1.96,"atraso":4.0,"tempo_inicio":2.94,"score":0.5,"trend":"↑","sla_series":[58.7,73.68,68.89,70.91,76.6,63.83,71.43,68.75,54.84,61.7,70.59,72.41,76.47],"nsu_series":[72.73,67.86,69.77,78.85,88.37,82.61,84.78,null,45.76,59.57,54.55,64.29,82.0],"cancel_series":[4.35,1.75,4.44,null,null,2.13,6.12,null,4.84,0.0,5.71,3.45,1.96],"ruptura_series":[null,null,null,null,null,19.57,6.52,null,6.78,6.38,3.03,1.79,0.0],"atraso_series":[9.09,10.71,6.98,11.54,2.33,2.17,2.17,null,6.78,6.38,9.09,5.36,4.0],"tempo_inicio_series":[null,null,null,3.32,2.49,3.38,3.31,3.04,6.46,4.11,4.36,4.58,2.94]},{"nome":"Drogaria Venancio V06 - Tijuca","cidade":"RIO DE JANEIRO","regional":"Outros","pedidos":610,"sla":77.19,"nsu":62.96,"ruptura":3.7,"cancel":5.26,"atraso":12.96,"tempo_inicio":4.98,"score":2.7,"trend":"↑","sla_series":[55.36,72.58,71.19,51.85,45.45,55.0,81.4,82.05,42.31,62.38,65.52,67.11,77.19],"nsu_series":[50.98,67.8,62.5,59.57,37.5,57.89,73.81,null,50.0,79.75,67.86,67.19,62.96],"cancel_series":[8.93,4.84,null,null,null,5.0,2.33,null,7.69,21.78,9.68,15.79,5.26],"ruptura_series":[null,null,null,null,null,2.63,4.76,null,4.17,6.33,14.29,12.5,3.7],"atraso_series":[7.84,10.17,5.36,12.77,9.38,7.89,0.0,null,16.67,7.59,7.14,6.25,12.96],"tempo_inicio_series":[null,null,null,7.37,8.36,6.71,4.16,2.99,6.13,4.83,5.63,5.85,4.98]},{"nome":"V82 - Drogaria Venancio - Av das Américas","cidade":"RIO DE JANEIRO","regional":"Vanessa","pedidos":607,"sla":57.14,"nsu":48.33,"ruptura":5.0,"cancel":14.29,"atraso":11.67,"tempo_inicio":7.64,"score":14.1,"trend":"↑","sla_series":[52.08,50.0,55.32,60.78,52.83,60.71,65.85,79.55,42.86,60.0,null,49.21,57.14],"nsu_series":[50.0,50.0,50.0,65.22,55.56,53.06,74.29,null,44.44,50.0,null,43.86,48.33],"cancel_series":[4.17,6.67,2.13,null,null,12.5,14.63,null,3.57,4.0,null,9.52,14.29],"ruptura_series":[null,null,null,null,null,12.24,20.0,null,25.93,14.58,null,10.53,5.0],"atraso_series":[10.87,12.5,6.52,4.35,2.22,2.04,2.86,null,0.0,7.29,null,21.05,11.67],"tempo_inicio_series":[null,null,null,5.44,5.76,6.44,3.94,5.28,5.86,5.82,null,7.14,7.64]},{"nome":"Drogaria Venancio V17 - Rua Visconde de Pirajá 276","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":606,"sla":76.39,"nsu":71.21,"ruptura":4.55,"cancel":8.33,"atraso":0.0,"tempo_inicio":4.04,"score":2.2,"trend":"↑","sla_series":[62.5,73.91,79.07,72.73,60.61,86.05,66.67,66.67,39.25,76.06,null,72.0,76.39],"nsu_series":[64.1,62.79,65.0,60.0,70.0,82.93,74.29,null,34.38,75.0,null,70.15,71.21],"cancel_series":[18.75,6.52,6.98,null,null,4.65,2.78,null,10.28,4.23,null,10.67,8.33],"ruptura_series":[null,null,null,null,null,7.32,8.57,null,20.83,5.88,null,8.96,4.55],"atraso_series":[7.69,4.65,15.0,10.0,13.33,2.44,0.0,null,16.67,8.82,null,7.46,0.0],"tempo_inicio_series":[null,null,null,5.66,3.74,2.91,3.81,3.91,8.88,4.02,null,4.03,4.04]},{"nome":"Drogaria Venancio V74 - Rua Augusto de Vasconcelos 96","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":602,"sla":84.0,"nsu":84.93,"ruptura":6.85,"cancel":2.67,"atraso":8.22,"tempo_inicio":3.03,"score":2.2,"trend":"↑","sla_series":[83.33,80.82,73.17,75.56,76.36,71.79,83.87,75.47,56.1,34.57,73.33,76.92,84.0],"nsu_series":[78.26,74.65,82.05,90.24,80.77,78.95,86.67,null,56.41,67.74,83.87,88.71,84.93],"cancel_series":[4.17,2.74,4.88,null,null,2.56,3.23,null,4.88,61.73,8.82,4.62,2.67],"ruptura_series":[null,null,null,null,null,5.26,6.67,null,7.69,0.0,6.45,1.61,6.85],"atraso_series":[6.52,5.63,2.56,7.32,3.85,5.26,3.33,null,15.38,6.45,6.45,3.23,8.22],"tempo_inicio_series":[null,null,null,2.22,4.15,4.11,2.47,3.02,4.97,4.14,2.95,2.9,3.03]},{"nome":"V27 - Conde de Bonfim 645","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":601,"sla":78.79,"nsu":71.43,"ruptura":4.76,"cancel":4.55,"atraso":7.94,"tempo_inicio":4.31,"score":2.0,"trend":"↑","sla_series":[85.71,79.55,78.57,70.0,72.5,80.43,69.77,84.44,46.15,81.13,67.24,70.21,78.79],"nsu_series":[82.98,54.55,66.67,70.0,72.5,62.22,65.79,null,56.0,69.81,56.25,59.57,71.43],"cancel_series":[4.08,0.0,3.57,null,null,2.17,11.63,null,3.85,0.0,3.03,0.0,4.55],"ruptura_series":[null,null,null,null,null,4.44,13.16,null,14.0,7.55,10.94,8.51,4.76],"atraso_series":[0.0,2.27,null,5.0,0.0,8.89,0.0,null,16.0,5.66,4.69,4.26,7.94],"tempo_inicio_series":[null,null,null,4.67,4.06,5.35,4.68,3.9,5.41,3.55,4.83,4.68,4.31]},{"nome":"V132- Rio Sul","cidade":"RIO DE JANEIRO","regional":"Marcio","pedidos":591,"sla":59.62,"nsu":43.48,"ruptura":13.04,"cancel":11.54,"atraso":6.52,"tempo_inicio":8.93,"score":15.4,"trend":"↓","sla_series":[70.91,76.36,85.71,81.03,74.42,70.37,76.67,79.07,41.86,87.18,null,90.57,59.62],"nsu_series":[54.72,62.96,57.41,52.63,68.42,66.0,65.52,null,30.0,72.37,null,66.04,43.48],"cancel_series":[3.64,1.82,3.57,null,null,7.41,3.33,null,6.98,2.56,null,0.0,11.54],"ruptura_series":[null,null,null,null,null,8.0,20.69,null,22.5,7.89,null,11.32,13.04],"atraso_series":[1.89,5.56,null,10.53,7.89,8.0,10.34,null,20.0,2.63,null,7.55,6.52],"tempo_inicio_series":[null,null,null,8.29,10.4,7.08,8.6,9.25,11.77,7.75,null,9.13,8.93]},{"nome":"V26 - Estrada de Jacarepaguá 7836","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":585,"sla":60.38,"nsu":64.58,"ruptura":6.25,"cancel":9.43,"atraso":4.17,"tempo_inicio":4.47,"score":8.1,"trend":"↓","sla_series":[69.44,85.11,70.73,75.61,70.59,80.49,78.05,72.22,57.89,65.33,67.65,67.24,60.38],"nsu_series":[85.71,75.0,64.1,65.79,71.88,79.49,71.05,null,48.0,56.45,72.86,72.73,64.58],"cancel_series":[2.78,6.38,4.88,null,null,4.88,7.32,null,12.28,17.33,7.89,5.17,9.43],"ruptura_series":[null,null,null,null,null,0.0,5.26,null,12.0,12.9,12.86,12.73,6.25],"atraso_series":[11.43,4.55,5.13,5.26,6.25,5.13,0.0,null,0.0,6.45,4.29,5.45,4.17],"tempo_inicio_series":[null,null,null,4.42,3.86,3.43,3.96,4.81,7.42,5.5,4.1,4.64,4.47]},{"nome":"Cidade Nova - V32","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":584,"sla":82.69,"nsu":79.17,"ruptura":6.25,"cancel":7.69,"atraso":2.08,"tempo_inicio":3.63,"score":2.5,"trend":"↑","sla_series":[81.4,87.04,76.47,64.1,81.97,86.05,80.95,75.0,63.89,81.36,63.89,65.0,82.69],"nsu_series":[90.24,88.89,82.0,87.88,73.33,78.57,63.16,null,72.22,81.36,68.57,72.22,79.17],"cancel_series":[4.65,0.0,1.96,null,null,2.33,9.52,null,0.0,0.0,5.41,10.0,7.69],"ruptura_series":[null,null,null,null,null,9.52,21.05,null,11.11,6.78,10.0,16.67,6.25],"atraso_series":[4.88,1.85,12.0,0.0,10.0,2.38,0.0,null,19.44,0.0,8.57,5.56,2.08],"tempo_inicio_series":[null,null,null,2.46,3.52,3.31,3.53,2.1,4.43,3.73,4.12,3.75,3.63]},{"nome":"Drogaria Venancio V161 - Itaipava","cidade":"PETROPOLIS","regional":"Wagner","pedidos":581,"sla":74.51,"nsu":85.71,"ruptura":6.12,"cancel":3.92,"atraso":4.08,"tempo_inicio":2.59,"score":2.2,"trend":"→","sla_series":[79.63,85.71,83.33,90.0,85.11,80.77,77.78,74.6,null,74.58,85.71,74.67,74.51],"nsu_series":[90.2,95.0,94.44,93.62,97.73,82.69,85.0,null,null,75.86,85.71,85.14,85.71],"cancel_series":[5.56,4.76,0.0,null,null,0.0,4.76,null,null,1.69,0.0,1.33,3.92],"ruptura_series":[null,null,null,null,null,5.77,3.33,null,null,5.17,0.0,5.41,6.12],"atraso_series":[3.92,5.0,8.33,4.26,11.36,7.69,3.33,null,null,3.45,7.14,8.11,4.08],"tempo_inicio_series":[null,null,null,1.89,1.39,2.41,2.9,2.52,null,3.03,2.3,2.78,2.59]},{"nome":"V126 - Vila Isabel","cidade":"RIO DE JANEIRO","regional":"Luciana","pedidos":579,"sla":56.25,"nsu":56.36,"ruptura":5.45,"cancel":14.06,"atraso":12.73,"tempo_inicio":5.91,"score":12.6,"trend":"↓","sla_series":[59.57,74.36,59.09,61.82,62.3,53.66,72.34,68.57,66.67,61.9,69.05,72.73,56.25],"nsu_series":[59.09,53.85,55.0,59.57,57.14,55.88,71.11,null,58.33,65.85,65.12,67.19,56.36],"cancel_series":[6.38,0.0,null,null,null,17.07,4.26,null,0.0,2.38,2.27,3.03,14.06],"ruptura_series":[null,null,null,null,null,11.76,15.56,null,5.56,4.88,6.98,9.38,5.45],"atraso_series":[9.09,5.13,0.0,8.51,7.14,2.94,4.44,null,16.67,7.32,4.65,4.69,12.73],"tempo_inicio_series":[null,null,null,5.16,5.02,5.53,3.95,5.42,6.23,4.5,3.91,4.45,5.91]},{"nome":"Drogaria Venancio V106 - Estrada de Jacarepaguá 6069","cidade":"RIO DE JANEIRO","regional":"Edinaldo","pedidos":570,"sla":78.26,"nsu":92.31,"ruptura":10.26,"cancel":15.22,"atraso":5.13,"tempo_inicio":1.84,"score":4.6,"trend":"↑","sla_series":[65.31,69.05,71.15,38.46,72.88,62.5,81.82,76.32,52.94,92.56,null,77.08,78.26],"nsu_series":[73.33,52.5,67.39,63.64,56.6,61.22,55.81,null,15.15,87.39,null,84.09,92.31],"cancel_series":[8.16,4.76,11.54,null,null,12.5,2.27,null,2.94,1.65,null,8.33,15.22],"ruptura_series":[null,null,null,null,null,6.12,6.98,null,6.06,0.0,null,6.82,10.26],"atraso_series":[13.33,10.0,8.7,4.55,11.32,8.16,13.95,null,21.21,4.2,null,6.82,5.13],"tempo_inicio_series":[null,null,null,4.89,6.77,4.44,5.65,4.61,13.92,2.16,null,2.22,1.84]},{"nome":"Drogaria Venancio V158 - Centro Cabo Frio","cidade":"CABO FRIO","regional":"Vanderson","pedidos":569,"sla":58.44,"nsu":52.86,"ruptura":1.43,"cancel":9.09,"atraso":1.43,"tempo_inicio":5.89,"score":10.6,"trend":"↓","sla_series":[50.0,46.67,62.0,56.14,76.74,60.61,69.57,63.41,null,53.13,57.14,71.59,58.44],"nsu_series":[54.72,58.93,50.0,48.21,62.79,57.58,61.36,null,null,78.38,57.14,52.38,52.86],"cancel_series":[8.62,6.67,4.0,null,null,0.0,4.35,null,null,42.19,11.11,4.55,9.09],"ruptura_series":[null,null,null,null,null,6.06,11.36,null,null,10.81,0.0,3.57,1.43],"atraso_series":[9.43,5.36,0.0,0.0,0.0,0.0,2.27,null,null,5.41,14.29,7.14,1.43],"tempo_inicio_series":[null,null,null,6.86,4.67,5.02,4.7,5.64,null,3.97,5.64,5.81,5.89]},{"nome":"V63 - Rua Jardim Botânico","cidade":"RIO DE JANEIRO","regional":"Rodrigo","pedidos":569,"sla":74.58,"nsu":50.0,"ruptura":0.0,"cancel":5.08,"atraso":14.29,"tempo_inicio":5.65,"score":5.4,"trend":"↑","sla_series":[65.63,77.36,82.05,70.73,85.71,82.35,70.59,73.68,53.33,81.82,68.92,71.43,74.58],"nsu_series":[70.0,66.67,70.27,60.53,76.47,72.73,64.52,null,48.89,54.55,50.79,53.33,50.0],"cancel_series":[6.25,3.77,5.13,null,null,2.94,8.82,null,0.0,0.0,4.55,4.76,5.08],"ruptura_series":[null,null,null,null,null,6.06,6.45,null,8.89,1.82,6.35,11.67,0.0],"atraso_series":[0.0,3.92,2.7,2.63,5.88,6.06,0.0,null,8.89,7.27,7.94,6.67,14.29],"tempo_inicio_series":[null,null,null,4.0,3.55,3.81,3.74,5.05,5.48,4.61,5.9,6.32,5.65]},{"nome":"V48 - Rua Figueiredo de Magalhães, 266 a","cidade":"RIO DE JANEIRO","regional":"Raphaela","pedidos":539,"sla":73.68,"nsu":74.55,"ruptura":3.64,"cancel":3.51,"atraso":3.64,"tempo_inicio":3.59,"score":1.9,"trend":"↑","sla_series":[76.47,81.82,85.71,78.38,76.92,73.81,83.33,70.27,71.43,72.58,63.86,69.44,73.68],"nsu_series":[72.73,59.52,62.86,65.71,78.38,77.5,79.31,null,47.62,77.42,74.7,78.79,74.55],"cancel_series":[2.94,4.55,0.0,null,null,4.76,3.33,null,0.0,0.0,7.87,8.33,3.51],"ruptura_series":[null,null,null,null,null,7.5,6.9,null,0.0,4.84,3.61,3.03,3.64],"atraso_series":[9.09,2.38,2.86,5.71,5.41,2.5,6.9,null,4.76,1.61,2.41,3.03,3.64],"tempo_inicio_series":[null,null,null,4.75,4.27,3.59,3.09,3.56,5.43,3.77,4.1,3.35,3.59]},{"nome":"Drogaria Venancio V31 - Estrada dos Três Rios 347","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":534,"sla":70.69,"nsu":78.0,"ruptura":4.0,"cancel":13.79,"atraso":10.0,"tempo_inicio":3.18,"score":4.9,"trend":"→","sla_series":[72.73,78.95,83.33,85.71,68.18,85.71,74.19,70.31,48.72,88.37,64.52,71.15,70.69],"nsu_series":[82.05,82.35,92.5,87.18,87.5,88.24,85.71,null,33.33,88.37,75.0,74.51,78.0],"cancel_series":[11.36,10.53,4.76,null,null,2.86,9.68,null,23.08,0.0,3.03,1.92,13.79],"ruptura_series":[null,null,null,null,null,2.94,3.57,null,16.67,4.65,6.25,1.96,4.0],"atraso_series":[2.56,3.92,2.5,5.13,2.5,2.94,0.0,null,13.33,4.65,6.25,3.92,10.0],"tempo_inicio_series":[null,null,null,2.17,2.27,2.57,2.51,2.45,8.17,2.53,3.67,3.42,3.18]},{"nome":"Drogaria Venancio V151 - Três Rios","cidade":"TRES RIOS","regional":"Vanderson","pedidos":533,"sla":62.5,"nsu":73.91,"ruptura":4.35,"cancel":17.86,"atraso":4.35,"tempo_inicio":3.86,"score":8.1,"trend":"↓","sla_series":[85.19,72.92,90.24,75.0,91.89,76.32,91.49,88.24,null,83.33,65.12,66.67,62.5],"nsu_series":[69.23,89.58,82.93,80.56,88.89,84.21,97.83,null,null,81.36,67.44,71.43,73.91],"cancel_series":[3.7,0.0,0.0,null,null,0.0,2.13,null,null,1.67,4.44,8.7,17.86],"ruptura_series":[null,null,null,null,null,0.0,2.17,null,null,0.0,6.98,3.17,4.35],"atraso_series":[7.69,20.83,12.2,5.56,5.56,10.53,4.35,null,null,10.17,9.3,6.35,4.35],"tempo_inicio_series":[null,null,null,2.42,2.85,2.71,1.8,3.21,null,3.09,4.87,4.42,3.86]},{"nome":"Drogaria Venancio V12 - Av. Bartolomeu Mitre 617","cidade":"RIO DE JANEIRO","regional":"Juan","pedidos":529,"sla":78.43,"nsu":80.39,"ruptura":5.88,"cancel":0.0,"atraso":11.76,"tempo_inicio":4.01,"score":1.8,"trend":"↑","sla_series":[64.15,76.47,73.53,71.05,67.86,65.96,82.93,79.07,37.5,70.83,66.67,68.75,78.43],"nsu_series":[73.58,81.25,76.47,60.53,57.14,68.89,75.61,null,42.11,63.04,64.71,62.5,80.39],"cancel_series":[0.0,5.88,0.0,null,null,4.26,0.0,null,5.0,4.17,10.53,0.0,0.0],"ruptura_series":[null,null,null,null,null,0.0,2.44,null,5.26,0.0,5.88,6.25,5.88],"atraso_series":[5.66,null,5.88,2.63,14.29,6.67,0.0,null,15.79,6.52,17.65,14.58,11.76],"tempo_inicio_series":[null,null,null,5.98,4.84,5.07,3.24,3.89,7.51,5.73,5.51,5.32,4.01]},{"nome":"V47 - Av. Nossa Sra. de Copacabana 872","cidade":"RIO DE JANEIRO","regional":"Raphaela","pedidos":527,"sla":64.29,"nsu":50.0,"ruptura":12.12,"cancel":5.71,"atraso":1.52,"tempo_inicio":6.26,"score":10.9,"trend":"↑","sla_series":[72.92,67.65,66.67,50.0,64.44,56.25,47.37,83.78,75.0,67.24,58.33,58.06,64.29],"nsu_series":[74.47,61.29,60.61,56.67,63.41,48.39,42.42,null,45.83,74.55,53.33,58.18,50.0],"cancel_series":[2.08,8.82,0.0,null,null,3.13,13.16,null,0.0,5.17,6.25,11.29,5.71],"ruptura_series":[null,null,null,null,null,12.9,6.06,null,8.33,9.09,8.89,14.55,12.12],"atraso_series":[4.26,6.45,null,6.67,12.2,0.0,0.0,null,4.17,7.27,6.67,7.27,1.52],"tempo_inicio_series":[null,null,null,5.17,4.55,7.07,5.67,4.4,8.36,3.84,6.83,6.55,6.26]},{"nome":"Drogaria Venancio V40 - Rua Carvalho de Souza 294","cidade":"RIO DE JANEIRO","regional":"Raphaela","pedidos":518,"sla":86.79,"nsu":82.35,"ruptura":3.92,"cancel":3.77,"atraso":15.69,"tempo_inicio":3.48,"score":2.1,"trend":"↑","sla_series":[75.0,54.76,85.11,76.47,77.14,79.49,82.61,88.1,23.53,82.0,66.67,72.22,86.79],"nsu_series":[80.0,88.57,84.44,84.85,82.86,81.08,78.26,null,60.0,78.0,62.79,70.31,82.35],"cancel_series":[6.25,16.67,4.26,null,null,5.13,0.0,null,11.76,0.0,15.69,11.11,3.77],"ruptura_series":[null,null,null,null,null,10.81,8.7,null,0.0,8.0,4.65,4.69,3.92],"atraso_series":[17.78,8.57,2.22,18.18,11.43,2.7,8.7,null,20.0,10.0,4.65,4.69,15.69],"tempo_inicio_series":[null,null,null,2.66,3.07,3.01,3.42,2.32,6.29,3.25,4.02,3.73,3.48]},{"nome":"V69 - Rua Visconde de Pirajá, 414","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":481,"sla":50.0,"nsu":33.33,"ruptura":22.22,"cancel":10.0,"atraso":0.0,"tempo_inicio":5.28,"score":22.6,"trend":"↑","sla_series":[61.43,52.54,51.47,57.14,49.28,40.82,72.34,83.33,48.78,66.67,50.0,37.5,50.0],"nsu_series":[67.16,49.06,53.85,59.68,45.31,36.96,62.22,null,50.0,77.78,80.0,62.5,33.33],"cancel_series":[4.29,10.17,4.41,null,null,6.12,4.26,null,12.2,0.0,8.33,0.0,10.0],"ruptura_series":[null,null,null,null,null,23.91,6.67,null,8.33,11.11,0.0,12.5,22.22],"atraso_series":[10.45,9.43,1.54,6.45,7.81,8.7,2.22,null,8.33,0.0,0.0,0.0,0.0],"tempo_inicio_series":[null,null,null,5.05,6.58,7.51,4.58,2.76,6.32,2.98,5.25,6.09,5.28]},{"nome":"Drogaria Venancio V10 - Av Prof. Manoel de Abreu 693","cidade":"RIO DE JANEIRO","regional":"Juan","pedidos":470,"sla":79.07,"nsu":76.19,"ruptura":4.76,"cancel":2.33,"atraso":2.38,"tempo_inicio":3.48,"score":1.4,"trend":"↑","sla_series":[70.0,73.33,74.55,81.25,81.58,75.86,82.14,74.29,62.5,85.07,null,62.5,79.07],"nsu_series":[73.33,61.36,67.31,68.75,73.68,64.29,67.86,null,37.5,80.3,null,65.91,76.19],"cancel_series":[0.0,2.22,5.45,null,null,3.45,0.0,null,0.0,149.0,null,8.33,2.33],"ruptura_series":[null,null,null,null,null,0.0,3.57,null,6.25,4.55,null,6.82,4.76],"atraso_series":[3.33,null,7.69,3.13,13.16,7.14,0.0,null,15.63,4.55,null,6.82,2.38],"tempo_inicio_series":[null,null,null,4.19,3.84,3.68,3.76,3.47,7.76,3.27,null,4.16,3.48]},{"nome":"Drogaria Venancio V39 - Av. Visconde do Rio Branco 461","cidade":"NITEROI","regional":"Raphaela","pedidos":458,"sla":81.82,"nsu":79.31,"ruptura":6.9,"cancel":12.12,"atraso":13.79,"tempo_inicio":2.87,"score":3.9,"trend":"↑","sla_series":[78.95,71.43,74.42,78.38,71.05,81.58,62.5,82.76,45.76,80.39,75.0,66.67,81.82],"nsu_series":[78.0,58.18,70.0,73.53,74.29,72.97,50.0,null,37.04,77.55,50.0,84.21,79.31],"cancel_series":[12.28,1.79,6.98,null,null,2.63,0.0,null,8.47,3.92,37.5,29.63,12.12],"ruptura_series":[null,null,null,null,null,8.11,25.0,null,9.26,6.12,0.0,0.0,6.9],"atraso_series":[2.0,10.91,5.0,2.94,5.71,5.41,0.0,null,11.11,0.0,0.0,5.26,13.79],"tempo_inicio_series":[null,null,null,4.14,4.47,4.36,5.37,3.97,9.32,4.12,4.18,3.49,2.87]},{"nome":"V54 - Av. Nilo Peçanha, 213","cidade":"NOVA IGUACU","regional":"Rodrigo","pedidos":457,"sla":47.06,"nsu":75.0,"ruptura":8.33,"cancel":29.41,"atraso":8.33,"tempo_inicio":2.9,"score":16.3,"trend":"↑","sla_series":[88.0,87.1,81.82,76.47,78.05,71.11,72.0,80.0,68.0,89.61,35.82,36.71,47.06],"nsu_series":[66.67,76.67,75.0,76.67,87.5,73.68,85.71,null,16.67,69.33,64.79,65.63,75.0],"cancel_series":[4.0,3.23,null,null,null,15.56,16.0,null,4.0,2.6,17.44,59.49,29.41],"ruptura_series":[null,null,null,null,null,7.89,4.76,null,12.5,5.33,7.04,12.5,8.33],"atraso_series":[12.5,16.67,6.25,30.0,5.0,0.0,0.0,null,12.5,4.0,12.68,9.38,8.33],"tempo_inicio_series":[null,null,null,3.75,3.73,4.22,2.82,4.37,12.06,4.99,5.45,5.07,2.9]},{"nome":"Drogaria Venancio V141 - Rua José de Linhares, 244 - Leblon","cidade":"RIO DE JANEIRO","regional":"Marcio","pedidos":435,"sla":45.83,"nsu":52.38,"ruptura":2.38,"cancel":12.5,"atraso":14.29,"tempo_inicio":6.08,"score":16.4,"trend":"↓","sla_series":[46.34,62.22,62.5,60.98,70.0,77.78,50.0,65.0,43.33,73.47,51.35,57.45,45.83],"nsu_series":[61.11,74.36,75.86,55.26,67.86,79.17,68.42,null,60.0,61.7,40.54,48.89,52.38],"cancel_series":[12.2,13.33,9.38,null,null,11.11,5.0,null,0.0,4.08,7.32,4.26,12.5],"ruptura_series":[null,null,null,null,null,4.17,21.05,null,10.0,0.0,23.68,15.56,2.38],"atraso_series":[11.11,10.26,17.24,5.26,10.71,4.17,0.0,null,0.0,0.0,10.81,4.44,14.29],"tempo_inicio_series":[null,null,null,5.65,4.99,3.46,3.8,5.35,5.17,4.94,6.59,7.16,6.08]},{"nome":"V56 - Rua Gavião Peixoto, 89","cidade":"NITEROI","regional":"Rodrigo","pedidos":435,"sla":69.05,"nsu":64.29,"ruptura":4.76,"cancel":0.0,"atraso":9.52,"tempo_inicio":4.1,"score":3.7,"trend":"↓","sla_series":[37.14,75.0,61.11,73.68,78.79,68.18,61.9,50.0,55.88,73.26,63.49,70.97,69.05],"nsu_series":[68.0,60.71,41.18,66.67,56.25,47.37,70.0,null,56.25,67.07,52.38,48.39,64.29],"cancel_series":[28.57,0.0,5.56,null,null,13.64,4.76,null,5.88,4.65,3.03,0.0,0.0],"ruptura_series":[null,null,null,null,null,15.79,10.0,null,0.0,3.66,6.25,3.23,4.76],"atraso_series":[4.0,10.71,5.88,0.0,6.25,10.53,0.0,null,12.5,4.88,6.25,6.45,9.52],"tempo_inicio_series":[null,null,null,4.69,5.67,6.92,4.54,6.43,9.1,3.93,6.45,7.07,4.1]},{"nome":"Drogaria Venancio - V156 - Rio Bonito","cidade":"RIO BONITO","regional":"Vanderson","pedidos":432,"sla":56.52,"nsu":66.67,"ruptura":0.0,"cancel":2.17,"atraso":0.0,"tempo_inicio":5.08,"score":6.8,"trend":"↓","sla_series":[50.0,57.89,51.52,50.0,45.95,43.75,56.67,60.71,null,50.0,68.75,74.36,56.52],"nsu_series":[65.38,74.29,62.5,70.45,71.43,74.19,79.31,null,null,71.43,56.25,69.23,66.67],"cancel_series":[7.14,7.89,null,null,null,3.13,3.33,null,null,0.0,11.11,0.0,2.17],"ruptura_series":[null,null,null,null,null,19.35,6.9,null,null,3.57,12.5,5.13,0.0],"atraso_series":[0.0,11.43,3.13,2.27,2.86,3.23,3.45,null,null,3.57,6.25,5.13,0.0],"tempo_inicio_series":[null,null,null,4.78,5.78,3.88,3.4,3.69,null,3.67,4.89,5.06,5.08]},{"nome":"V77 - R Coronel Agostinho, 76","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":430,"sla":54.24,"nsu":73.47,"ruptura":0.0,"cancel":16.95,"atraso":8.16,"tempo_inicio":4.5,"score":10.2,"trend":"↓","sla_series":[63.64,52.63,81.82,72.58,65.85,86.67,69.77,76.47,null,81.58,60.87,54.24,null],"nsu_series":[58.54,53.13,78.79,79.25,69.7,69.05,81.58,null,null,64.86,70.37,73.47,null],"cancel_series":[6.82,15.79,0.0,null,null,6.67,11.63,null,null,2.63,18.18,16.95,null],"ruptura_series":[null,null,null,null,null,0.0,0.0,null,null,5.41,0.0,0.0,null],"atraso_series":[4.88,9.38,0.0,5.66,3.03,4.76,0.0,null,null,5.41,7.41,8.16,null],"tempo_inicio_series":[null,null,null,3.52,3.75,4.43,3.46,3.42,null,4.42,4.17,4.5,null]},{"nome":"V73 - Estrada União e Indústria 10290","cidade":"PETROPOLIS","regional":"Thaysa","pedidos":413,"sla":78.95,"nsu":82.35,"ruptura":0.0,"cancel":10.53,"atraso":0.0,"tempo_inicio":2.62,"score":1.6,"trend":"↑","sla_series":[67.5,74.55,81.82,62.0,73.33,60.0,68.52,56.0,66.67,78.57,70.59,66.67,78.95],"nsu_series":[76.92,76.47,86.36,80.43,81.82,78.79,83.67,null,87.5,92.31,66.67,66.67,82.35],"cancel_series":[2.5,7.27,0.0,null,null,5.71,9.26,null,3.03,7.14,10.0,0.0,10.53],"ruptura_series":[null,null,null,null,null,3.03,6.12,null,6.25,0.0,11.11,11.11,0.0],"atraso_series":[7.69,7.84,0.0,0.0,2.27,9.09,8.16,null,0.0,0.0,11.11,7.41,0.0],"tempo_inicio_series":[null,null,null,2.98,3.05,3.61,4.19,4.1,3.22,1.97,4.0,3.86,2.62]},{"nome":"V115 - Rua Visconde de Piraja,589 Lj a","cidade":"RIO DE JANEIRO","regional":"Edinaldo","pedidos":406,"sla":75.0,"nsu":66.67,"ruptura":7.69,"cancel":2.5,"atraso":7.69,"tempo_inicio":3.82,"score":2.3,"trend":"↓","sla_series":[76.67,76.67,58.33,79.17,73.17,74.19,77.78,74.07,20.69,82.05,82.35,80.95,75.0],"nsu_series":[82.14,71.43,62.5,75.0,65.0,80.0,74.07,null,34.62,73.68,62.86,64.29,66.67],"cancel_series":[6.67,6.67,0.0,null,null,3.23,0.0,null,10.34,2.56,5.41,0.0,2.5],"ruptura_series":[null,null,null,null,null,13.33,18.52,null,19.23,7.89,0.0,2.38,7.69],"atraso_series":[3.57,0.0,4.17,4.17,5.0,3.33,3.7,null,7.69,5.26,5.71,7.14,7.69],"tempo_inicio_series":[null,null,null,4.0,4.72,3.04,3.72,3.83,9.17,4.6,4.43,4.99,3.82]},{"nome":"Leblon - V35","cidade":"RIO DE JANEIRO","regional":"Raphaela","pedidos":405,"sla":66.67,"nsu":65.63,"ruptura":6.25,"cancel":3.03,"atraso":3.13,"tempo_inicio":5.06,"score":4.8,"trend":"↓","sla_series":[76.92,69.23,53.13,73.08,56.0,52.63,40.91,66.67,45.45,51.02,60.66,69.23,66.67],"nsu_series":[84.0,58.33,65.63,65.38,63.64,31.58,50.0,null,35.0,47.92,55.74,68.0,65.63],"cancel_series":[3.85,7.69,0.0,null,null,0.0,0.0,null,9.09,2.04,1.59,3.85,3.03],"ruptura_series":[null,null,null,null,null,21.05,9.09,null,12.5,6.25,9.84,4.0,6.25],"atraso_series":[16.0,8.33,15.63,7.69,22.73,15.79,0.0,null,20.0,4.17,4.92,0.0,3.13],"tempo_inicio_series":[null,null,null,4.22,5.25,12.34,7.25,5.69,9.0,7.06,5.21,5.37,5.06]},{"nome":"Drogaria Venancio V144 - Leblon","cidade":"RIO DE JANEIRO","regional":"Marcio","pedidos":394,"sla":93.33,"nsu":90.0,"ruptura":0.0,"cancel":0.0,"atraso":0.0,"tempo_inicio":3.03,"score":0.0,"trend":"↑","sla_series":[67.57,76.19,52.0,44.44,62.5,82.61,38.89,71.43,null,84.62,82.43,88.89,93.33],"nsu_series":[72.22,76.19,58.33,37.5,60.87,77.27,60.87,null,null,80.77,82.88,86.11,90.0],"cancel_series":[2.7,0.0,4.0,null,null,4.35,36.11,null,null,0.0,0.89,0.0,0.0],"ruptura_series":[null,null,null,null,null,4.55,13.04,null,null,3.85,0.9,0.0,0.0],"atraso_series":[11.11,0.0,0.0,6.25,4.35,0.0,0.0,null,null,0.0,0.0,0.0,0.0],"tempo_inicio_series":[null,null,null,6.32,5.52,3.66,4.47,3.87,null,2.85,2.4,2.66,3.03]},{"nome":"V123 - Drogaria Venancio - José Alvarenga","cidade":"DUQUE DE CAXIAS","regional":"Luciana","pedidos":388,"sla":54.76,"nsu":58.06,"ruptura":0.0,"cancel":26.19,"atraso":19.35,"tempo_inicio":5.13,"score":13.7,"trend":"↑","sla_series":[57.14,71.43,70.0,53.49,46.51,70.27,null,74.47,20.83,71.93,null,43.48,54.76],"nsu_series":[74.07,64.0,70.0,76.32,56.76,76.47,null,null,39.29,75.0,null,54.84,58.06],"cancel_series":[3.57,10.71,0.0,null,null,8.11,null,null,41.67,8.77,null,32.61,26.19],"ruptura_series":[null,null,null,null,null,8.82,null,null,0.0,0.0,null,3.23,0.0],"atraso_series":[40.74,24.0,12.5,13.16,10.81,5.88,null,null,10.71,11.54,null,12.9,19.35],"tempo_inicio_series":[null,null,null,3.24,5.05,4.18,null,4.46,7.33,3.72,null,4.72,5.13]},{"nome":"V23 - Centro","cidade":"RIO DE JANEIRO","regional":"Nathalia","pedidos":388,"sla":75.0,"nsu":75.0,"ruptura":4.55,"cancel":8.33,"atraso":11.36,"tempo_inicio":4.55,"score":2.7,"trend":"↓","sla_series":[72.22,75.0,80.0,72.22,64.0,71.88,64.29,88.57,45.45,78.43,84.31,81.82,75.0],"nsu_series":[68.57,62.96,72.0,58.82,62.5,80.65,69.23,null,33.33,62.22,80.39,64.52,75.0],"cancel_series":[2.78,3.57,0.0,null,null,3.13,7.14,null,18.18,11.76,5.36,6.06,8.33],"ruptura_series":[null,null,null,null,null,3.23,0.0,null,11.11,2.22,7.84,6.45,4.55],"atraso_series":[14.29,14.81,4.0,11.76,4.17,3.23,0.0,null,11.11,8.89,0.0,0.0,11.36],"tempo_inicio_series":[null,null,null,5.69,5.66,3.79,5.21,2.89,8.55,5.04,4.88,4.8,4.55]},{"nome":"Drogaria Venancio V157 - Gávea","cidade":"RIO DE JANEIRO","regional":"Vanderson","pedidos":380,"sla":82.22,"nsu":72.09,"ruptura":2.33,"cancel":4.44,"atraso":9.3,"tempo_inicio":4.09,"score":1.6,"trend":"↑","sla_series":[60.47,60.0,61.29,51.85,53.33,63.33,62.16,66.67,null,64.1,71.88,70.45,82.22],"nsu_series":[66.67,74.07,61.29,68.18,55.56,73.08,64.52,null,null,75.0,60.61,63.41,72.09],"cancel_series":[2.33,10.0,0.0,null,null,13.33,16.22,null,null,7.69,2.94,6.82,4.44],"ruptura_series":[null,null,null,null,null,7.69,22.58,null,null,2.78,6.06,4.88,2.33],"atraso_series":[4.76,3.7,0.0,0.0,11.11,11.54,9.68,null,null,5.56,9.09,4.88,9.3],"tempo_inicio_series":[null,null,null,3.95,6.2,4.16,5.4,5.11,null,4.69,4.67,5.0,4.09]},{"nome":"V124 - Av. Ministro Edgar Costa 80","cidade":"NOVA IGUACU","regional":"Luciana","pedidos":357,"sla":64.29,"nsu":66.67,"ruptura":12.5,"cancel":14.29,"atraso":8.33,"tempo_inicio":5.53,"score":8.8,"trend":"↓","sla_series":[66.67,73.33,84.62,82.05,81.25,85.0,79.17,70.27,60.61,80.77,null,64.29,null],"nsu_series":[80.0,72.09,73.68,87.18,74.19,62.16,69.57,null,46.88,60.0,null,66.67,null],"cancel_series":[9.09,4.44,2.56,null,null,7.5,4.17,null,3.03,3.85,null,14.29,null],"ruptura_series":[null,null,null,null,null,8.11,0.0,null,9.38,20.0,null,12.5,null],"atraso_series":[6.67,11.63,2.63,5.13,6.45,5.41,0.0,null,18.75,4.0,null,8.33,null],"tempo_inicio_series":[null,null,null,3.15,4.35,5.19,4.42,4.15,10.36,4.69,null,5.53,null]},{"nome":"V98 - Av. das Américas 4666","cidade":"RIO DE JANEIRO","regional":"Daygine","pedidos":335,"sla":73.08,"nsu":34.78,"ruptura":4.35,"cancel":11.54,"atraso":4.35,"tempo_inicio":9.21,"score":11.0,"trend":"↑","sla_series":[71.43,76.19,58.82,89.29,80.0,78.57,88.0,61.54,50.0,78.9,56.25,65.0,73.08],"nsu_series":[55.0,44.44,31.25,50.0,50.0,59.26,70.83,null,50.0,40.0,47.06,50.0,34.78],"cancel_series":[4.76,14.29,5.88,null,null,3.57,4.0,null,0.0,17.43,0.0,0.0,11.54],"ruptura_series":[null,null,null,null,null,0.0,8.33,null,25.0,2.22,11.76,10.0,4.35],"atraso_series":[5.0,5.56,12.5,0.0,0.0,11.11,4.17,null,25.0,12.22,0.0,0.0,4.35],"tempo_inicio_series":[null,null,null,6.83,8.63,7.39,4.23,7.53,6.85,11.99,7.5,7.66,9.21]},{"nome":"V67 - Av. Rio Branco, 277 - Lojas a G H","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":290,"sla":75.0,"nsu":50.0,"ruptura":0.0,"cancel":0.0,"atraso":0.0,"tempo_inicio":3.68,"score":3.8,"trend":"↑","sla_series":[75.86,51.72,72.0,59.09,55.56,79.31,36.36,100.0,58.33,73.68,62.82,28.57,75.0],"nsu_series":[82.76,62.96,70.83,71.43,57.69,80.77,37.5,null,55.0,78.95,74.36,33.33,50.0],"cancel_series":[0.0,6.9,4.0,null,null,10.34,27.27,null,16.67,0.0,4.94,57.14,0.0],"ruptura_series":[null,null,null,null,null,7.69,12.5,null,0.0,0.0,0.0,0.0,0.0],"atraso_series":[3.45,7.41,12.5,9.52,7.69,0.0,0.0,null,5.0,0.0,8.97,0.0,0.0],"tempo_inicio_series":[null,null,null,3.78,6.54,3.48,5.37,2.54,4.78,3.97,2.56,5.08,3.68]},{"nome":"V140 - Drogaria Venancio - Av Nossa Senhora de Copacabana","cidade":"RIO DE JANEIRO","regional":"Marcio","pedidos":273,"sla":61.29,"nsu":50.0,"ruptura":3.57,"cancel":9.68,"atraso":7.14,"tempo_inicio":6.06,"score":11.1,"trend":"↓","sla_series":[44.83,50.0,71.43,43.24,61.9,47.37,71.43,68.75,40.0,56.25,null,70.37,61.29],"nsu_series":[51.72,68.75,68.57,50.0,77.78,47.06,57.14,null,66.67,40.0,null,52.0,50.0],"cancel_series":[0.0,0.0,0.0,null,null,10.53,0.0,null,10.0,6.25,null,7.41,9.68],"ruptura_series":[null,null,null,null,null,0.0,35.71,null,11.11,10.0,null,20.0,3.57],"atraso_series":[6.9,6.25,20.0,7.14,22.22,0.0,0.0,null,5.56,3.33,null,0.0,7.14],"tempo_inicio_series":[null,null,null,6.58,3.74,5.67,4.58,4.05,6.0,6.64,null,5.02,6.06]},{"nome":"V103 - Av. Governador Amaral Peixoto, 252","cidade":"NOVA IGUACU","regional":"Edinaldo","pedidos":270,"sla":42.86,"nsu":71.43,"ruptura":7.14,"cancel":33.33,"atraso":0.0,"tempo_inicio":4.29,"score":17.7,"trend":"↓","sla_series":[81.25,69.23,64.71,66.67,66.67,57.14,65.22,75.0,50.0,65.52,51.35,48.15,42.86],"nsu_series":[100.0,66.67,78.57,80.0,82.61,63.64,84.21,null,61.9,66.67,67.57,69.57,71.43],"cancel_series":[12.5,7.69,17.65,null,null,21.43,17.39,null,4.55,6.9,7.5,14.81,33.33],"ruptura_series":[null,null,null,null,null,0.0,0.0,null,0.0,7.41,0.0,0.0,7.14],"atraso_series":[14.29,8.33,7.14,10.0,0.0,9.09,0.0,null,23.81,7.41,10.81,8.7,0.0],"tempo_inicio_series":[null,null,null,3.21,4.23,4.37,2.52,3.04,6.7,4.9,4.98,5.16,4.29]},{"nome":"Drogaria Venancio V150 - Vila Valqueire","cidade":"RIO DE JANEIRO","regional":"Vanderson","pedidos":247,"sla":69.92,"nsu":75.96,"ruptura":5.77,"cancel":15.45,"atraso":8.65,"tempo_inicio":3.51,"score":5.7,"trend":"↑","sla_series":[null,null,null,null,null,null,null,null,null,null,null,64.44,69.92],"nsu_series":[null,null,null,null,null,null,null,null,null,null,null,64.34,75.96],"cancel_series":[null,null,null,null,null,null,null,null,null,null,null,20.56,15.45],"ruptura_series":[null,null,null,null,null,null,null,null,null,null,null,6.29,5.77],"atraso_series":[null,null,null,null,null,null,null,null,null,null,null,5.59,8.65],"tempo_inicio_series":[null,null,null,null,null,null,null,null,null,null,null,5.49,3.51]},{"nome":"V100 - Drogaria Venancio - Rua Conde do Bonfim","cidade":"RIO DE JANEIRO","regional":"Daygine","pedidos":238,"sla":61.54,"nsu":61.11,"ruptura":0.0,"cancel":7.69,"atraso":2.78,"tempo_inicio":5.05,"score":7.0,"trend":"↑","sla_series":[71.74,58.33,62.5,66.67,64.29,80.0,76.47,78.95,43.75,46.97,null,50.0,61.54],"nsu_series":[69.05,54.55,75.0,72.73,50.0,55.56,62.5,null,33.33,65.91,null,42.86,61.11],"cancel_series":[8.7,8.33,0.0,null,null,10.0,5.88,null,6.25,33.33,null,0.0,7.69],"ruptura_series":[null,null,null,null,null,11.11,18.75,null,6.67,13.64,null,21.43,0.0],"atraso_series":[4.76,0.0,12.5,0.0,7.14,0.0,12.5,null,6.67,6.82,null,0.0,2.78],"tempo_inicio_series":[null,null,null,3.94,5.78,4.95,4.71,3.68,7.81,4.46,null,6.13,5.05]},{"nome":"Drogaria Venancio V93 - Largo do Machado 11","cidade":"RIO DE JANEIRO","regional":"Daygine","pedidos":214,"sla":73.33,"nsu":46.67,"ruptura":13.33,"cancel":0.0,"atraso":0.0,"tempo_inicio":5.91,"score":7.8,"trend":"↓","sla_series":[52.94,64.29,60.0,50.0,43.75,70.0,63.16,78.95,65.0,72.0,76.47,90.91,73.33],"nsu_series":[66.67,64.29,61.11,54.55,61.54,60.0,64.71,null,40.0,78.26,52.94,68.18,46.67],"cancel_series":[11.76,0.0,10.0,null,null,0.0,10.53,null,0.0,8.0,17.39,0.0,0.0],"ruptura_series":[null,null,null,null,null,0.0,11.76,null,5.0,4.35,0.0,13.64,13.33],"atraso_series":[0.0,7.14,null,0.0,0.0,20.0,0.0,null,20.0,0.0,11.76,4.55,0.0],"tempo_inicio_series":[null,null,null,4.42,5.56,5.77,5.08,2.84,11.34,4.01,6.05,4.97,5.91]},{"nome":"V61 - Rua Marques de São Vicente 52","cidade":"RIO DE JANEIRO","regional":"Rodrigo","pedidos":197,"sla":94.12,"nsu":94.12,"ruptura":0.0,"cancel":0.0,"atraso":5.88,"tempo_inicio":2.37,"score":0.3,"trend":"↑","sla_series":[78.57,72.22,88.24,85.71,86.67,82.35,77.78,81.82,23.08,86.36,69.23,70.59,94.12],"nsu_series":[84.62,81.25,100.0,84.62,100.0,70.59,77.78,null,11.54,81.82,76.92,84.62,94.12],"cancel_series":[7.14,null,11.76,null,null,0.0,0.0,null,0.0,0.0,18.75,23.53,0.0],"ruptura_series":[null,null,null,null,null,11.76,22.22,null,15.38,0.0,15.38,7.69,0.0],"atraso_series":[15.38,6.25,0.0,0.0,14.29,11.76,0.0,null,34.62,0.0,7.69,0.0,5.88],"tempo_inicio_series":[null,null,null,3.38,1.68,4.74,2.92,6.25,12.52,3.21,3.9,3.5,2.37]},{"nome":"Drogaria Venancio V04 - Praça Saens Pena","cidade":"RIO DE JANEIRO","regional":"Outros","pedidos":194,"sla":64.71,"nsu":66.67,"ruptura":6.67,"cancel":11.76,"atraso":0.0,"tempo_inicio":4.43,"score":6.7,"trend":"↑","sla_series":[87.5,71.43,75.0,47.06,64.29,69.23,50.0,50.0,31.25,69.23,50.0,52.94,64.71],"nsu_series":[68.75,61.9,71.43,33.33,64.29,66.67,25.0,null,25.0,23.08,34.21,37.5,66.67],"cancel_series":[0.0,0.0,12.5,null,null,7.69,0.0,null,0.0,0.0,15.56,5.88,11.76],"ruptura_series":[null,null,null,null,null,8.33,25.0,null,12.5,30.77,15.79,12.5,6.67],"atraso_series":[6.25,9.52,14.29,0.0,21.43,8.33,0.0,null,6.25,0.0,13.16,6.25,0.0],"tempo_inicio_series":[null,null,null,5.63,5.44,5.69,9.04,3.0,7.06,7.02,10.54,10.95,4.43]},{"nome":"V70 - Rua do Catete 34","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":194,"sla":77.78,"nsu":100.0,"ruptura":0.0,"cancel":0.0,"atraso":11.11,"tempo_inicio":1.75,"score":0.6,"trend":"↑","sla_series":[76.19,65.22,62.5,54.55,61.9,70.0,46.67,80.0,60.0,61.54,71.43,71.43,77.78],"nsu_series":[80.0,57.14,38.1,60.0,50.0,82.14,36.36,null,50.0,76.92,71.43,71.43,100.0],"cancel_series":[4.76,8.7,12.5,null,null,6.67,26.67,null,20.0,0.0,0.0,0.0,0.0],"ruptura_series":[null,null,null,null,null,17.86,18.18,null,0.0,7.69,14.29,0.0,0.0],"atraso_series":[10.0,14.29,23.81,10.0,15.0,7.14,9.09,null,0.0,0.0,0.0,0.0,11.11],"tempo_inicio_series":[null,null,null,5.76,4.89,4.13,7.52,1.63,6.72,3.4,4.57,3.82,1.75]},{"nome":"V07 - Rua Conde de Bonfim 340","cidade":"RIO DE JANEIRO","regional":"Outros","pedidos":191,"sla":54.17,"nsu":57.89,"ruptura":15.79,"cancel":20.83,"atraso":5.26,"tempo_inicio":5.0,"score":15.6,"trend":"↓","sla_series":[52.94,50.0,86.67,57.14,75.0,68.75,91.67,56.52,33.33,36.36,64.71,69.57,54.17],"nsu_series":[29.41,36.36,66.67,44.44,70.0,53.33,66.67,null,27.27,77.78,58.82,50.0,57.89],"cancel_series":[0.0,21.43,0.0,null,null,6.25,0.0,null,8.33,18.18,0.0,4.35,20.83],"ruptura_series":[null,null,null,null,null,6.67,0.0,null,9.09,33.33,0.0,0.0,15.79],"atraso_series":[5.88,null,6.67,0.0,0.0,0.0,0.0,null,18.18,0.0,0.0,4.55,5.26],"tempo_inicio_series":[null,null,null,6.72,3.95,5.49,3.75,2.66,7.47,5.84,8.09,6.82,5.0]},{"nome":"Drogaria Venancio V08 - Rua da Quitanda 89","cidade":"RIO DE JANEIRO","regional":"Outros","pedidos":165,"sla":68.42,"nsu":68.42,"ruptura":5.26,"cancel":0.0,"atraso":15.79,"tempo_inicio":5.17,"score":4.1,"trend":"↓","sla_series":[58.33,62.5,70.59,63.64,76.92,90.91,100.0,75.0,20.0,68.42,88.24,78.57,68.42],"nsu_series":[63.64,53.33,62.5,88.89,83.33,90.91,100.0,null,40.0,66.67,76.47,75.0,68.42],"cancel_series":[8.33,6.25,5.88,null,null,0.0,0.0,null,0.0,5.26,5.26,14.29,0.0],"ruptura_series":[null,null,null,null,null,0.0,0.0,null,0.0,0.0,0.0,0.0,5.26],"atraso_series":[0.0,6.67,12.5,22.22,16.67,18.18,0.0,null,0.0,16.67,0.0,0.0,15.79],"tempo_inicio_series":[null,null,null,4.91,2.57,1.93,1.02,3.57,5.52,4.4,2.66,3.34,5.17]},{"nome":"Visconde de Piraja - V113","cidade":"RIO DE JANEIRO","regional":"Edinaldo","pedidos":147,"sla":100.0,"nsu":100.0,"ruptura":0.0,"cancel":0.0,"atraso":0.0,"tempo_inicio":1.75,"score":0.0,"trend":"↑","sla_series":[66.67,85.71,75.0,87.5,42.86,100.0,75.0,83.33,16.67,66.67,73.86,77.78,100.0],"nsu_series":[33.33,50.0,50.0,75.0,100.0,80.0,66.67,null,75.0,83.33,63.64,77.78,100.0],"cancel_series":[0.0,14.29,0.0,null,null,0.0,25.0,null,33.33,0.0,2.22,0.0,0.0],"ruptura_series":[null,null,null,null,null,0.0,33.33,null,50.0,16.67,4.55,33.33,0.0],"atraso_series":[33.33,33.33,0.0,null,33.33,20.0,0.0,null,0.0,0.0,4.55,0.0,0.0],"tempo_inicio_series":[null,null,null,2.97,1.47,2.87,4.32,4.21,3.24,5.25,3.96,3.77,1.75]},{"nome":"Drogaria Venancio V01 - Praça Saens Pena 31","cidade":"RIO DE JANEIRO","regional":"Outros","pedidos":140,"sla":66.67,"nsu":66.67,"ruptura":0.0,"cancel":0.0,"atraso":8.33,"tempo_inicio":4.93,"score":3.3,"trend":"↑","sla_series":[54.55,50.0,62.5,56.25,63.64,33.33,58.33,87.5,35.0,58.33,72.73,60.0,66.67],"nsu_series":[50.0,35.71,57.14,57.14,36.36,40.0,72.73,null,31.58,36.36,60.0,44.44,66.67],"cancel_series":[9.09,0.0,12.5,null,null,16.67,8.33,null,5.0,8.33,9.09,10.0,0.0],"ruptura_series":[null,null,null,null,null,40.0,18.18,null,26.32,0.0,0.0,22.22,0.0],"atraso_series":[20.0,0.0,14.29,7.14,18.18,20.0,0.0,null,26.32,0.0,0.0,11.11,8.33],"tempo_inicio_series":[null,null,null,6.47,9.09,11.16,4.32,2.42,10.37,5.15,8.27,9.88,4.93]},{"nome":"V71 Av. Ayrton Senna, 2541","cidade":"RIO DE JANEIRO","regional":"Thaysa","pedidos":137,"sla":76.79,"nsu":88.46,"ruptura":null,"cancel":7.14,"atraso":3.85,"tempo_inicio":null,"score":1.3,"trend":"↑","sla_series":[84.09,72.73,76.79,null,null,null,null,null,null,null,null,null,null],"nsu_series":[88.37,80.95,88.46,null,null,null,null,null,null,null,null,null,null],"cancel_series":[2.27,4.55,7.14,null,null,null,null,null,null,null,null,null,null],"ruptura_series":[null,null,null,null,null,null,null,null,null,null,null,null,null],"atraso_series":[9.3,4.76,3.85,null,null,null,null,null,null,null,null,null,null],"tempo_inicio_series":[null,null,null,null,null,null,null,null,null,null,null,null,null]},{"nome":"V515 - Av. Nilo Peçanha 73","cidade":"NOVA IGUACU","regional":"Outros","pedidos":129,"sla":55.56,"nsu":100.0,"ruptura":0.0,"cancel":22.22,"atraso":14.29,"tempo_inicio":2.77,"score":10.9,"trend":"↓","sla_series":[10.0,60.0,33.33,60.0,66.67,75.0,100.0,64.29,50.0,59.26,64.29,61.54,55.56],"nsu_series":[0.0,75.0,14.29,62.5,83.33,87.5,66.67,null,50.0,46.15,53.85,66.67,100.0],"cancel_series":[70.0,20.0,22.22,null,null,0.0,0.0,null,0.0,3.7,7.14,7.69,22.22],"ruptura_series":[null,null,null,null,null,12.5,0.0,null,0.0,0.0,7.69,0.0,0.0],"atraso_series":[66.67,0.0,0.0,0.0,0.0,12.5,16.67,null,50.0,3.85,11.54,16.67,14.29],"tempo_inicio_series":[null,null,null,4.43,2.68,2.7,3.61,8.47,4.52,6.23,4.46,4.68,2.77]},{"nome":"V59 - Av. Rio Branco 124","cidade":"RIO DE JANEIRO","regional":"Rodrigo","pedidos":129,"sla":77.78,"nsu":85.71,"ruptura":28.57,"cancel":22.22,"atraso":14.29,"tempo_inicio":2.28,"score":9.8,"trend":"↑","sla_series":[88.89,75.0,77.78,66.67,37.5,76.47,80.0,50.0,58.33,100.0,64.71,60.0,77.78],"nsu_series":[77.78,63.64,77.78,85.71,66.67,92.86,80.0,null,45.45,83.33,76.47,88.89,85.71],"cancel_series":[0.0,8.33,0.0,null,null,17.65,0.0,null,8.33,0.0,23.81,40.0,22.22],"ruptura_series":[null,null,null,null,null,21.43,0.0,null,18.18,0.0,6.25,22.22,28.57],"atraso_series":[0.0,null,null,0.0,0.0,14.29,20.0,null,9.09,0.0,0.0,0.0,14.29],"tempo_inicio_series":[null,null,null,2.91,4.22,2.61,2.42,3.23,6.54,3.4,3.3,2.39,2.28]},{"nome":"V51 - Rua do Rosário, 131","cidade":"RIO DE JANEIRO","regional":"Rodrigo","pedidos":106,"sla":100.0,"nsu":71.43,"ruptura":0.0,"cancel":0.0,"atraso":14.29,"tempo_inicio":2.53,"score":0.7,"trend":"↑","sla_series":[100.0,100.0,100.0,100.0,50.0,57.14,100.0,71.43,12.5,100.0,68.18,55.56,100.0],"nsu_series":[100.0,100.0,100.0,100.0,85.71,80.0,100.0,null,25.0,100.0,63.64,100.0,71.43],"cancel_series":[0.0,0.0,0.0,null,null,28.57,0.0,null,0.0,0.0,4.35,44.44,0.0],"ruptura_series":[null,null,null,null,null,0.0,0.0,null,0.0,0.0,4.55,20.0,0.0],"atraso_series":[0.0,0.0,0.0,null,42.86,20.0,0.0,null,25.0,15.38,4.55,0.0,14.29],"tempo_inicio_series":[null,null,null,3.34,2.43,3.54,1.03,3.18,7.92,1.39,3.22,2.03,2.53]},{"nome":"V159 - Cachambi","cidade":"RIO DE JANEIRO","regional":"Vanderson","pedidos":104,"sla":100.0,"nsu":50.0,"ruptura":0.0,"cancel":0.0,"atraso":0.0,"tempo_inicio":10.53,"score":3.8,"trend":"↑","sla_series":[75.0,92.86,75.0,23.08,44.44,75.0,0.0,57.14,42.86,66.67,68.42,66.67,100.0],"nsu_series":[40.0,53.85,25.0,40.0,50.0,50.0,0.0,null,57.14,66.67,57.89,40.0,50.0],"cancel_series":[0.0,7.14,0.0,null,null,0.0,50.0,null,0.0,0.0,14.29,16.67,0.0],"ruptura_series":[null,null,null,null,null,0.0,0.0,null,0.0,0.0,16.67,20.0,0.0],"atraso_series":[20.0,null,25.0,20.0,33.33,25.0,0.0,null,14.29,33.33,0.0,0.0,0.0],"tempo_inicio_series":[null,null,null,5.54,5.46,5.44,8.45,10.08,5.13,4.66,4.58,4.44,10.53]},{"nome":"V09 - General Roca 836","cidade":"RIO DE JANEIRO","regional":"Outros","pedidos":85,"sla":34.78,"nsu":87.5,"ruptura":12.5,"cancel":65.22,"atraso":0.0,"tempo_inicio":3.14,"score":26.4,"trend":"↓","sla_series":[100.0,81.82,77.78,56.25,71.43,40.0,87.5,75.0,null,81.25,71.43,null,34.78],"nsu_series":[100.0,72.73,100.0,80.0,100.0,66.67,100.0,null,null,86.67,71.43,null,87.5],"cancel_series":[0.0,0.0,null,null,null,40.0,12.5,null,null,6.25,12.5,null,65.22],"ruptura_series":[null,null,null,null,null,33.33,14.29,null,null,13.33,28.57,null,12.5],"atraso_series":[0.0,null,0.0,0.0,0.0,0.0,0.0,null,null,0.0,0.0,null,0.0],"tempo_inicio_series":[null,null,null,2.44,3.2,14.61,2.5,1.89,null,3.08,3.23,null,3.14]},{"nome":"V02 - Conde de Bonfim 375","cidade":"RIO DE JANEIRO","regional":"Outros","pedidos":84,"sla":66.67,"nsu":50.0,"ruptura":0.0,"cancel":0.0,"atraso":0.0,"tempo_inicio":6.83,"score":6.7,"trend":"↓","sla_series":[71.43,50.0,57.14,66.67,66.67,50.0,75.0,50.0,75.0,93.33,72.73,80.0,66.67],"nsu_series":[57.14,75.0,42.86,80.0,40.0,25.0,50.0,null,66.67,80.0,63.64,40.0,50.0],"cancel_series":[0.0,0.0,0.0,null,null,0.0,0.0,null,25.0,0.0,0.0,0.0,0.0],"ruptura_series":[null,null,null,null,null,0.0,0.0,null,0.0,0.0,7.14,20.0,0.0],"atraso_series":[14.29,0.0,14.29,20.0,0.0,25.0,0.0,null,0.0,0.0,0.0,0.0,0.0],"tempo_inicio_series":[null,null,null,3.78,4.72,7.34,6.06,1.13,3.43,2.94,7.35,7.46,6.83]},{"nome":"V553 - Gonçalves Dias","cidade":"RIO DE JANEIRO","regional":"Outros","pedidos":73,"sla":64.62,"nsu":71.23,"ruptura":5.48,"cancel":3.95,"atraso":8.22,"tempo_inicio":5.67,"score":5.7,"trend":"→","sla_series":[null,null,null,null,null,null,null,null,null,null,64.62,null,null],"nsu_series":[null,null,null,null,null,null,null,null,null,null,71.23,null,null],"cancel_series":[null,null,null,null,null,null,null,null,null,null,3.95,null,null],"ruptura_series":[null,null,null,null,null,null,null,null,null,null,5.48,null,null],"atraso_series":[null,null,null,null,null,null,null,null,null,null,8.22,null,null],"tempo_inicio_series":[null,null,null,null,null,null,null,null,null,null,5.67,null,null]},{"nome":"Drogaria Venancio V129 - Guadalupe","cidade":"RIO DE JANEIRO","regional":"Luciana","pedidos":43,"sla":55.56,"nsu":60.47,"ruptura":9.3,"cancel":2.27,"atraso":4.65,"tempo_inicio":5.28,"score":10.4,"trend":"→","sla_series":[null,null,null,null,null,null,null,null,null,null,55.56,null,null],"nsu_series":[null,null,null,null,null,null,null,null,null,null,60.47,null,null],"cancel_series":[null,null,null,null,null,null,null,null,null,null,2.27,null,null],"ruptura_series":[null,null,null,null,null,null,null,null,null,null,9.3,null,null],"atraso_series":[null,null,null,null,null,null,null,null,null,null,4.65,null,null],"tempo_inicio_series":[null,null,null,null,null,null,null,null,null,null,5.28,null,null]}],"bench":[{"label":"09/03/2026 até 15/03/2026","sla":68.1,"nsu":69.2,"ruptura":null,"cancel":9.6,"atraso":9.8,"tempo":null,"pedidos":12385},{"label":"16/03/2026 até 22/03/2026","sla":69.7,"nsu":66.1,"ruptura":null,"cancel":7.4,"atraso":7.8,"tempo":null,"pedidos":12417},{"label":"23/03/2026 até 29/03/2026","sla":72.2,"nsu":67.2,"ruptura":null,"cancel":7.4,"atraso":348.0,"tempo":null,"pedidos":11707},{"label":"30/03/2026 até 05/04/2026","sla":67.1,"nsu":68.1,"ruptura":null,"cancel":null,"atraso":6.6,"tempo":4.7,"pedidos":11426},{"label":"06/04/2026 até 12/04/2026","sla":68.2,"nsu":67.6,"ruptura":null,"cancel":null,"atraso":10.2,"tempo":4.8,"pedidos":11489},{"label":"13/04/2026 até 19/04/2026","sla":69.7,"nsu":67.3,"ruptura":7.4,"cancel":5.7,"atraso":6.8,"tempo":4.9,"pedidos":11194},{"label":"20/04/2026 até 26/04/2026","sla":72.4,"nsu":69.7,"ruptura":8.4,"cancel":5.8,"atraso":4.0,"tempo":4.4,"pedidos":10817},{"label":"27/04/2026 até 04/05/2026","sla":72.1,"nsu":70.9,"ruptura":6.1,"cancel":4.6,"atraso":5.3,"tempo":4.2,"pedidos":11002},{"label":"04/05/2026 até 11/05/2026","sla":51.4,"nsu":45.9,"ruptura":9.4,"cancel":12.2,"atraso":15.3,"tempo":7.8,"pedidos":8599},{"label":"11/05/2026 até 17/05/2026","sla":70.4,"nsu":68.6,"ruptura":8.4,"cancel":13.3,"atraso":10.2,"tempo":4.7,"pedidos":12166},{"label":"25/05/2026 até 31/05/2026","sla":67.4,"nsu":63.7,"ruptura":7.1,"cancel":6.6,"atraso":5.9,"tempo":5.1,"pedidos":11780},{"label":"01/06/2026 até 07/06/2026","sla":67.8,"nsu":64.8,"ruptura":7.7,"cancel":6.9,"atraso":5.7,"tempo":5.2,"pedidos":13562},{"label":"08/06/2026 até 14/06/2026","sla":68.4,"nsu":68.1,"ruptura":4.9,"cancel":7.9,"atraso":6.7,"tempo":4.8,"pedidos":12207}],"last_week_label":"08/06/2026 até 14/06/2026"};
+
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
+const REGIONAL_COLORS = {
+  'Daygine':'#f97316','Edinaldo':'#06b6d4','Juan':'#8b5cf6','Luciana':'#ec4899',
+  'Marcio':'#14b8a6','Nathalia':'#f59e0b','Raphaela':'#3b82f6','Rodrigo':'#22c55e',
+  'Thaysa':'#e11d48','Vanderson':'#6366f1','Vanessa':'#a855f7','Wagner':'#84cc16',
+  'Sem Regional':'#4a5068'
+};
+const PAGE_SIZE = 20;
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let activeRegional = 'TODOS';
+let currentSort = 'pedidos';
+let currentPage = 1;
+let sortAsc = false;
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function pctColor(v, goodHigh=true) {
+  if (v == null) return 'var(--text3)';
+  const n = parseFloat(v);
+  if (goodHigh) {
+    if (n >= 75) return 'var(--green)';
+    if (n >= 60) return 'var(--yellow)';
+    return 'var(--red)';
+  } else {
+    if (n <= 5) return 'var(--green)';
+    if (n <= 10) return 'var(--yellow)';
+    return 'var(--red)';
+  }
+}
+
+function tempoColor(v) {
+  if (v == null) return 'var(--text3)';
+  if (v <= 4) return 'var(--green)';
+  if (v <= 7) return 'var(--yellow)';
+  return 'var(--red)';
+}
+
+function fmtPct(v, goodHigh=true) {
+  if (v == null) return '<span style="color:var(--text3)">—</span>';
+  return `<span class="pct" style="color:${pctColor(v,goodHigh)}">${parseFloat(v).toFixed(1)}%</span>`;
+}
+
+function fmtTempo(v) {
+  if (v == null) return '<span style="color:var(--text3)">—</span>';
+  return `<span class="pct" style="color:${tempoColor(v)}">${parseFloat(v).toFixed(1)}m</span>`;
+}
+
+function barEl(v, max=100, color='var(--blue)') {
+  if (v == null) return '';
+  const w = Math.min(80, (v/max)*80);
+  return `<div class="bar" style="width:${w}px;background:${color}"></div>`;
+}
+
+function sparkline(series, color) {
+  const valid = series.filter(x => x != null);
+  if (valid.length < 2) return '<span style="color:var(--text3);font-size:10px">—</span>';
+  const min = Math.min(...valid), max = Math.max(...valid), range = max-min||1;
+  return `<div class="spark">${series.map(v => {
+    if (v == null) return `<div class="spark-bar" style="height:3px;background:var(--border)"></div>`;
+    const h = 3 + ((v-min)/range)*18;
+    return `<div class="spark-bar" style="height:${h}px;background:${color}"></div>`;
+  }).join('')}</div>`;
+}
+
+function scoreCls(s) {
+  if (s >= 30) return 'score-high';
+  if (s >= 20) return 'score-med';
+  return 'score-low';
+}
+
+function regionalBadge(r) {
+  const c = REGIONAL_COLORS[r] || '#4a5068';
+  return `<span class="td-regional" style="background:${c}22;color:${c}">${r}</span>`;
+}
+
+function filteredStores() {
+  const q = document.getElementById('store-search')?.value.toLowerCase() || '';
+  return DATA.stores.filter(s =>
+    (activeRegional === 'TODOS' || s.regional === activeRegional) &&
+    (s.nome.toLowerCase().includes(q) || s.cidade.toLowerCase().includes(q) || s.regional.toLowerCase().includes(q))
+  );
+}
+
+function sortedStores() {
+  const list = filteredStores();
+  const k = currentSort;
+  list.sort((a, b) => {
+    const av = a[k] ?? (sortAsc ? Infinity : -Infinity);
+    const bv = b[k] ?? (sortAsc ? Infinity : -Infinity);
+    return sortAsc ? av - bv : bv - av;
+  });
+  return list;
+}
+
+// ── REGIONAL FILTER ────────────────────────────────────────────────────────
+function buildRegionalChips() {
+  const el = document.getElementById('regional-chips');
+  el.innerHTML = DATA.regionais.map(r => {
+    const c = REGIONAL_COLORS[r]||'#4a5068';
+    return `<div class="filter-chip" style="border-color:${c}33" onclick="setRegional('${r}',this)" data-r="${r}">${r}</div>`;
+  }).join('');
+}
+
+function setRegional(r, el) {
+  activeRegional = r;
+  currentPage = 1;
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.classList.remove('active');
+    c.style.background = '';
+    c.style.color = '';
+  });
+  if (el) {
+    el.classList.add('active');
+    if (r !== 'TODOS') {
+      const c = REGIONAL_COLORS[r]||'var(--blue)';
+      el.style.background = c;
+      el.style.color = 'white';
+      el.style.borderColor = c;
+    }
+  }
+  document.getElementById('bench-regional-label').textContent = r === 'TODOS' ? 'Todas as lojas' : `Regional: ${r}`;
+  renderAll();
+}
+
+// ── SORT ───────────────────────────────────────────────────────────────────
+function setSort(key, btn) {
+  if (currentSort === key) { sortAsc = !sortAsc; }
+  else { currentSort = key; sortAsc = ['sla','nsu'].includes(key); }
+  currentPage = 1;
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderStoresTable();
+}
+
+// ── RENDER ALL ─────────────────────────────────────────────────────────────
+function renderAll() {
+  renderKPIs();
+  renderBench();
+  renderTopLists();
+  renderStoresTable();
+  renderAlerts();
+  renderTrends();
+}
+
+// ── KPIs ───────────────────────────────────────────────────────────────────
+function renderKPIs() {
+  const stores = filteredStores();
+  const semNums = [...new Set(DATA.stores.map(s => s.sla_series.length))];
+  const nWeeks = DATA.semanas.length;
+
+  // compute averages per week from filtered stores
+  function weekAvg(series_key, week_idx) {
+    const vals = stores.map(s => (s[series_key]||[])[week_idx]).filter(v => v != null);
+    if (!vals.length) return null;
+    return vals.reduce((a,b)=>a+b,0)/vals.length;
+  }
+
+  const lastIdx = nWeeks - 1;
+  const prevIdx = nWeeks - 2;
+
+  const metrics = [
+    {key:'sla_series', label:'SLA Médio', sub:'% pedidos no prazo', cls:'sla', color:'var(--blue)', goodHigh:true, fmt:v=>`${v.toFixed(1)}%`},
+    {key:'nsu_series', label:'NSU <5min', sub:'motoboy ≤5min na loja', cls:'nsu', color:'var(--green)', goodHigh:true, fmt:v=>`${v.toFixed(1)}%`},
+    {key:'tempo_inicio_series', label:'Tempo Início', sub:'min para começar separar', cls:'tempo', color:'#a78bfa', goodHigh:false, fmt:v=>`${v.toFixed(1)}m`},
+    {key:'ruptura_series', label:'Ruptura', sub:'pedidos rupturados', cls:'ruptura', color:'var(--yellow)', goodHigh:false, fmt:v=>`${v.toFixed(1)}%`},
+    {key:'cancel_series', label:'Cancelamento', sub:'pedidos cancelados', cls:'cancel', color:'var(--accent)', goodHigh:false, fmt:v=>`${v.toFixed(1)}%`},
+    {key:'atraso_series', label:'Atraso Crítico', sub:'pedidos muito atrasados', cls:'atraso', color:'var(--accent2)', goodHigh:false, fmt:v=>`${v.toFixed(1)}%`},
+  ];
+
+  document.getElementById('kpi-grid').innerHTML = metrics.map(m => {
+    const last = weekAvg(m.key, lastIdx);
+    const prev = weekAvg(m.key, prevIdx);
+    if (last == null) return '';
+    const d = prev != null ? last - prev : null;
+    const positive = d != null ? (m.goodHigh ? d > 0 : d < 0) : null;
+    const dStr = d != null ? `<div class="kpi-delta ${positive?'up':'down'}">${d>0?'+':''}${d.toFixed(1)}${m.key.includes('tempo')?'m':'pp'} vs semana anterior</div>` : '';
+    return `<div class="kpi ${m.cls}">
+      <div class="kpi-label">${m.label}</div>
+      <div class="kpi-value" style="color:${m.color}">${m.fmt(last)}</div>
+      <div class="kpi-sub">${m.sub}</div>
+      ${dStr}
+    </div>`;
+  }).join('') + `<div class="kpi pedidos">
+    <div class="kpi-label">Lojas no Filtro</div>
+    <div class="kpi-value" style="color:#94a3b8">${stores.length}</div>
+    <div class="kpi-sub">de ${DATA.stores.length} total</div>
+  </div>`;
+}
+
+// ── BENCH ──────────────────────────────────────────────────────────────────
+function renderBench() {
+  const stores = filteredStores();
+  const nWeeks = DATA.semanas.length;
+  const colors = {SLA:'var(--blue)',NSU:'var(--green)','T.Início':'#a78bfa',Ruptura:'var(--yellow)',Cancelamento:'var(--accent)','Atraso':'var(--accent2)'};
+
+  function weekAvg(series_key, week_idx) {
+    const vals = stores.map(s => (s[series_key]||[])[week_idx]).filter(v => v != null);
+    return vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : null;
+  }
+
+  document.getElementById('bench-chart').innerHTML = DATA.semanas.map((label, i) => {
+    const sla = weekAvg('sla_series', i);
+    const nsu = weekAvg('nsu_series', i);
+    const ti = weekAvg('tempo_inicio_series', i);
+    const rup = weekAvg('ruptura_series', i);
+    const can = weekAvg('cancel_series', i);
+    const atr = weekAvg('atraso_series', i);
+    const ped = stores.reduce((sum, s) => sum + ((s.sla_series||[])[i] != null ? (s.pedidos/nWeeks) : 0), 0);
+    const rows = [
+      ['SLA',sla,'var(--blue)',v=>`${v.toFixed(1)}%`],
+      ['NSU',nsu,'var(--green)',v=>`${v.toFixed(1)}%`],
+      ['T.Início',ti,'#a78bfa',v=>`${v.toFixed(1)}m`],
+      ['Ruptura',rup,'var(--yellow)',v=>`${v.toFixed(1)}%`],
+      ['Cancelamento',can,'var(--accent)',v=>`${v.toFixed(1)}%`],
+      ['Atraso',atr,'var(--accent2)',v=>`${v.toFixed(1)}%`],
+    ];
+    return `<div class="bench-week">
+      <div class="bench-week-label">📅 ${label}</div>
+      ${rows.map(([n,v,c,f]) => v != null ? `<div class="bench-metric"><span class="bench-metric-name">${n}</span><span class="bench-metric-val" style="color:${c}">${f(v)}</span></div>` : '').join('')}
+    </div>`;
+  }).join('');
+}
+
+// ── TOP LISTS ──────────────────────────────────────────────────────────────
+function renderTopLists() {
+  const rankC = ['#ffd60a','#c0c0c0','#cd7f32','var(--text3)','var(--text3)'];
+  const stores = filteredStores();
+  const nWeeks = DATA.semanas.length;
+
+  function getLastVal(s, key) {
+    const series = s[key] || [];
+    const valid = series.filter(v => v != null);
+    return valid.length ? valid[valid.length-1] : null;
+  }
+
+  function topItem(s, rank, val, color) {
+    return `<div class="top-item">
+      <div class="top-rank" style="background:${rankC[rank]}22;color:${rankC[rank]}">${rank+1}</div>
+      <div class="top-store">
+        <div class="top-store-name">${s.nome}</div>
+        <div class="top-store-city">${s.cidade} · ${s.regional}</div>
+      </div>
+      <div class="top-val" style="color:${color}">${val}</div>
+    </div>`;
+  }
+
+  const withLast = (key) => stores.map(s => ({...s, _v: getLastVal(s, key)})).filter(s => s._v != null);
+
+  const bestSLA = withLast('sla_series').sort((a,b)=>b._v-a._v).slice(0,5);
+  const worstSLA = withLast('sla_series').sort((a,b)=>a._v-b._v).slice(0,5);
+  const topRup = withLast('ruptura_series').sort((a,b)=>b._v-a._v).slice(0,5);
+  const topCan = withLast('cancel_series').sort((a,b)=>b._v-a._v).slice(0,5);
+
+  document.getElementById('top-best-sla').innerHTML = bestSLA.map((s,i)=>topItem(s,i,`${s._v.toFixed(1)}%`,'var(--green)')).join('');
+  document.getElementById('top-worst-sla').innerHTML = worstSLA.map((s,i)=>topItem(s,i,`${s._v.toFixed(1)}%`,'var(--red)')).join('');
+  document.getElementById('top-ruptura').innerHTML = topRup.map((s,i)=>topItem(s,i,`${s._v.toFixed(1)}%`,'var(--yellow)')).join('');
+  document.getElementById('top-cancel').innerHTML = topCan.map((s,i)=>topItem(s,i,`${s._v.toFixed(1)}%`,'var(--accent)')).join('');
+}
+
+// ── STORES TABLE ───────────────────────────────────────────────────────────
+function renderStoresTable() {
+  const list = sortedStores();
+  const total = Math.ceil(list.length / PAGE_SIZE);
+  if (currentPage > total) currentPage = Math.max(1, total);
+  const start = (currentPage-1)*PAGE_SIZE;
+  const slice = list.slice(start, start+PAGE_SIZE);
+
+  document.getElementById('page-info').textContent = `${start+1}–${Math.min(start+PAGE_SIZE,list.length)} de ${list.length} lojas`;
+  document.getElementById('btn-prev').disabled = currentPage <= 1;
+  document.getElementById('btn-next').disabled = currentPage >= total;
+
+  document.getElementById('stores-tbody').innerHTML = slice.map((s,i) => {
+    const tCls = s.trend==='↑'?'trend-up':s.trend==='↓'?'trend-down':'trend-flat';
+    return `<tr onclick="openModal('${s.nome.replace(/'/g,"\\'")}')">
+      <td style="color:var(--text3);font-size:11px">${start+i+1}</td>
+      <td class="td-store">${s.nome}<small>${s.cidade}</small></td>
+      <td>${regionalBadge(s.regional)}</td>
+      <td style="font-family:var(--mono)">${s.pedidos.toLocaleString('pt-BR')}</td>
+      <td><div class="bar-cell">${barEl(s.sla,100,'var(--blue)')}${fmtPct(s.sla,true)}</div></td>
+      <td><div class="bar-cell">${barEl(s.nsu,100,'var(--green)')}${fmtPct(s.nsu,true)}</div></td>
+      <td>${fmtTempo(s.tempo_inicio)}</td>
+      <td>${fmtPct(s.ruptura,false)}</td>
+      <td>${fmtPct(s.cancel,false)}</td>
+      <td>${fmtPct(s.atraso,false)}</td>
+      <td><span class="score-badge ${scoreCls(s.score)}">${s.score!=null?s.score.toFixed(0):'—'}</span></td>
+      <td>${sparkline(s.sla_series,'var(--blue)')} <span class="${tCls}">${s.trend}</span></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="12" style="text-align:center;padding:32px;color:var(--text3)">Nenhuma loja encontrada</td></tr>';
+}
+
+function changePage(dir) {
+  const list = sortedStores();
+  const total = Math.ceil(list.length/PAGE_SIZE);
+  currentPage = Math.max(1, Math.min(total, currentPage+dir));
+  renderStoresTable();
+}
+
+// ── ALERTS ─────────────────────────────────────────────────────────────────
+function renderAlerts() {
+  const stores = filteredStores();
+  const rankC = ['#ff4757','#ff6b6b','#ff8787','#ffa3a3','#ffbfbf','#ffd5d5','#ffe0e0','#ffebeb'];
+
+  function getLastVal(s, key) {
+    const series = s[key]||[];
+    const valid = series.filter(v=>v!=null);
+    return valid.length ? valid[valid.length-1] : null;
+  }
+
+  function alertItem(s, val, color, extra='') {
+    return `<div class="top-item">
+      <div class="top-store">
+        <div class="top-store-name">${s.nome}</div>
+        <div class="top-store-city">${s.cidade} · ${regionalBadge(s.regional)} ${extra}</div>
+      </div>
+      <div class="top-val" style="color:${color}">${val}</div>
+    </div>`;
+  }
+
+  const worstNSU = stores.map(s=>({...s,_v:getLastVal(s,'nsu_series')})).filter(s=>s._v!=null).sort((a,b)=>a._v-b._v).slice(0,8);
+  const worstTempo = stores.map(s=>({...s,_v:getLastVal(s,'tempo_inicio_series')})).filter(s=>s._v!=null).sort((a,b)=>b._v-a._v).slice(0,8);
+  const worstAtraso = stores.map(s=>({...s,_v:getLastVal(s,'atraso_series')})).filter(s=>s._v!=null).sort((a,b)=>b._v-a._v).slice(0,8);
+  const worstCancel = stores.map(s=>({...s,_v:getLastVal(s,'cancel_series')})).filter(s=>s._v!=null).sort((a,b)=>b._v-a._v).slice(0,8);
+
+  document.getElementById('alert-nsu').innerHTML = worstNSU.map(s=>alertItem(s,`${s._v.toFixed(1)}%`,'var(--red)',`· SLA: ${getLastVal(s,'sla_series')?.toFixed(1)||'—'}%`)).join('');
+  document.getElementById('alert-tempo').innerHTML = worstTempo.map(s=>alertItem(s,`${s._v.toFixed(1)}m`,'#a78bfa')).join('');
+  document.getElementById('alert-atraso').innerHTML = worstAtraso.map(s=>alertItem(s,`${s._v.toFixed(1)}%`,'var(--accent2)')).join('');
+  document.getElementById('alert-cancel').innerHTML = worstCancel.map(s=>alertItem(s,`${s._v.toFixed(1)}%`,'var(--accent)')).join('');
+
+  // Trend
+  const withDelta = stores.filter(s => {
+    const v0 = (s.sla_series||[]).find(v=>v!=null);
+    const vn = [...(s.sla_series||[])].reverse().find(v=>v!=null);
+    return v0!=null && vn!=null;
+  }).map(s => {
+    const v0 = s.sla_series.find(v=>v!=null);
+    const vn = [...s.sla_series].reverse().find(v=>v!=null);
+    return {...s, _s1: v0, _sn: vn, _d: vn-v0};
+  });
+
+  const piorou = [...withDelta].sort((a,b)=>a._d-b._d).slice(0,8);
+  const melhorou = [...withDelta].sort((a,b)=>b._d-a._d).slice(0,8);
+
+  document.getElementById('trend-piorou').innerHTML = piorou.map(s=>`
+    <div class="trend-item">
+      <div class="trend-delta" style="color:var(--red)">${s._d.toFixed(1)}pp</div>
+      <div class="trend-info">
+        <div class="trend-name">${s.nome}</div>
+        <div class="trend-sla">${s._s1.toFixed(1)}% → ${s._sn.toFixed(1)}% · ${s.regional}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('trend-melhorou').innerHTML = melhorou.map(s=>`
+    <div class="trend-item">
+      <div class="trend-delta" style="color:var(--green)">+${s._d.toFixed(1)}pp</div>
+      <div class="trend-info">
+        <div class="trend-name">${s.nome}</div>
+        <div class="trend-sla">${s._s1.toFixed(1)}% → ${s._sn.toFixed(1)}% · ${s.regional}</div>
+      </div>
+    </div>`).join('');
+
+  // Critical table
+  const critical = stores.filter(s => (s.score||0) >= 28).sort((a,b)=>(b.score||0)-(a.score||0));
+  document.getElementById('critical-count').textContent = `${critical.length} lojas`;
+  document.getElementById('critical-tbody').innerHTML = critical.map(s => {
+    const issues = [];
+    if ((s.sla||100) < 60) issues.push('⚠️ SLA baixo');
+    if ((s.cancel||0) > 12) issues.push('❌ Cancel alto');
+    if ((s.ruptura||0) > 12) issues.push('📦 Ruptura alta');
+    if ((s.nsu||100) < 55) issues.push('🛵 NSU ruim');
+    if ((s.atraso||0) > 12) issues.push('⏰ Atraso');
+    if ((s.tempo_inicio||0) > 7) issues.push('⏱️ T.Início lento');
+    return `<tr onclick="openModal('${s.nome.replace(/'/g,"\\'")}')">
+      <td class="td-store">${s.nome}<small>${s.cidade}</small></td>
+      <td>${regionalBadge(s.regional)}</td>
+      <td style="font-family:var(--mono)">${s.pedidos}</td>
+      <td>${fmtPct(s.sla,true)}</td>
+      <td>${fmtPct(s.nsu,true)}</td>
+      <td>${fmtTempo(s.tempo_inicio)}</td>
+      <td>${fmtPct(s.cancel,false)}</td>
+      <td>${fmtPct(s.ruptura,false)}</td>
+      <td><span class="score-badge ${scoreCls(s.score)}">${s.score?.toFixed(0)||'—'}</span></td>
+      <td style="font-size:10px">${issues.join(' ')}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── TRENDS ─────────────────────────────────────────────────────────────────
+function renderTrends() {
+  const stores = filteredStores().slice(0,24);
+  const n = DATA.semanas.length;
+  document.getElementById('trend-charts').innerHTML = stores.map(s => {
+    const series = s.sla_series.filter(v=>v!=null);
+    if (!series.length) return '';
+    const min = 0, max = 100;
+    const w = 260, h = 55;
+    const pts = DATA.semanas.map((_,i) => {
+      const v = s.sla_series[i];
+      if (v==null) return null;
+      const x = n>1 ? (i/(n-1))*w : w/2;
+      const y = h - ((v-min)/(max-min))*(h-10)-5;
+      return {x,y,v};
+    }).filter(Boolean);
+    const poly = pts.length>=2 ? `<polyline points="${pts.map(p=>`${p.x},${p.y}`).join(' ')}" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"/>` : '';
+    const dots = pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="3" fill="var(--blue)" stroke="var(--surface)" stroke-width="1.5"/><text x="${p.x}" y="${p.y-7}" font-size="8" fill="var(--text2)" text-anchor="middle">${p.v.toFixed(0)}</text>`).join('');
+    const trendC = s.trend==='↑'?'var(--green)':s.trend==='↓'?'var(--red)':'var(--text2)';
+    const rc = REGIONAL_COLORS[s.regional]||'#4a5068';
+    return `<div class="top-card" onclick="openModal('${s.nome.replace(/'/g,"\\'")}')">
+      <div class="top-card-header">
+        <span class="icon">🏪</span>
+        <div style="min-width:0;flex:1">
+          <h3 style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.nome}</h3>
+          <div class="subtitle">${s.cidade} · <span style="color:${rc};font-weight:600">${s.regional}</span> · SLA ${s.sla}% <span style="color:${trendC}">${s.trend}</span></div>
+        </div>
+      </div>
+      <div style="padding:14px 18px">
+        <div style="font-size:9px;color:var(--text3);margin-bottom:6px">SLA % por semana</div>
+        <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px;overflow:visible">${poly}${dots}</svg>
+        <div style="display:flex;justify-content:space-between;margin-top:3px">
+          ${DATA.semanas.map(s=>`<span style="font-size:8px;color:var(--text3)">${s.split(' ')[0]}</span>`).join('')}
+        </div>
+        <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
+          <span style="font-size:10px">🛵 NSU <b style="color:var(--green)">${s.nsu??'—'}%</b></span>
+          <span style="font-size:10px">⏱️ T.In <b style="color:#a78bfa">${s.tempo_inicio??'—'}m</b></span>
+          <span style="font-size:10px">❌ Can <b style="color:var(--accent)">${s.cancel??'—'}%</b></span>
+          <span style="font-size:10px">📦 Rup <b style="color:var(--yellow)">${s.ruptura??'—'}%</b></span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── MODAL ──────────────────────────────────────────────────────────────────
+function openModal(nome) {
+  const s = DATA.stores.find(x=>x.nome===nome);
+  if (!s) return;
+  const rc = REGIONAL_COLORS[s.regional]||'#4a5068';
+  document.getElementById('modal-title').textContent = s.nome;
+  document.getElementById('modal-sub').innerHTML = `${s.cidade} · <span style="color:${rc};font-weight:600">${s.regional}</span> · ${s.pedidos.toLocaleString('pt-BR')} pedidos`;
+
+  const kpis = [
+    {l:'SLA Médio', v:s.sla+'%', c:'var(--blue)'},
+    {l:'NSU <5min', v:s.nsu+'%', c:'var(--green)'},
+    {l:'T. Início', v:(s.tempo_inicio??'—')+(s.tempo_inicio?'m':''), c:'#a78bfa'},
+    {l:'Ruptura', v:s.ruptura+'%', c:'var(--yellow)'},
+    {l:'Cancelamento', v:s.cancel+'%', c:'var(--accent)'},
+    {l:'Atraso Crítico', v:s.atraso+'%', c:'var(--accent2)'},
+    {l:'Score Risco', v:s.score?.toFixed(0)||'—', c:s.score>=30?'var(--red)':s.score>=20?'var(--yellow)':'var(--green)'},
+  ];
+  document.getElementById('modal-kpis').innerHTML = kpis.map(k=>`
+    <div class="modal-kpi">
+      <div class="modal-kpi-label">${k.l}</div>
+      <div class="modal-kpi-val" style="color:${k.c}">${k.v}</div>
+    </div>`).join('');
+
+  const charts = [
+    {key:'sla_series', label:'SLA (%)', color:'#4a90f5', goodHigh:true},
+    {key:'nsu_series', label:'NSU <5min (%)', color:'#00d9a0', goodHigh:true},
+    {key:'tempo_inicio_series', label:'Tempo Início (min)', color:'#a78bfa', goodHigh:false},
+    {key:'cancel_series', label:'Cancelamento (%)', color:'#ff3e6c', goodHigh:false},
+    {key:'ruptura_series', label:'Ruptura (%)', color:'#ffd60a', goodHigh:false},
+  ];
+
+  document.getElementById('modal-charts').innerHTML = charts.map(m => {
+    const series = s[m.key]||[];
+    const valid = series.filter(v=>v!=null);
+    if (!valid.length) return '';
+    const min=0, max=m.key.includes('tempo')?Math.max(15,...valid):100;
+    const w=380, h=65, n=DATA.semanas.length;
+    const pts = DATA.semanas.map((_,i) => {
+      const v=series[i]; if(v==null) return null;
+      const x=n>1?(i/(n-1))*w:w/2;
+      const y=h-((v-min)/(max-min))*(h-14)-7;
+      return {x,y,v};
+    }).filter(Boolean);
+    const poly = pts.length>=2?`<polyline points="${pts.map(p=>`${p.x},${p.y}`).join(' ')}" fill="none" stroke="${m.color}" stroke-width="2.5" stroke-linecap="round"/>`:''
+    const dots = pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="4" fill="${m.color}" stroke="var(--surface)" stroke-width="2"/><text x="${p.x}" y="${p.y-9}" font-size="9" fill="${m.color}" text-anchor="middle">${p.v.toFixed(1)}</text>`).join('');
+    return `<div style="margin-bottom:18px">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:6px">${m.label}</div>
+      <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px;overflow:visible">${poly}${dots}</svg>
+      <div style="display:flex;justify-content:space-between;margin-top:2px">
+        ${DATA.semanas.map(s=>`<span style="font-size:9px;color:var(--text3)">${s}</span>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('modal-backdrop').classList.add('open');
+}
+
+function closeModal(e) { if(e.target===document.getElementById('modal-backdrop')) closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modal-backdrop').classList.remove('open'); }
+
+// ── NAV ────────────────────────────────────────────────────────────────────
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('section-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+function init() {
+  document.getElementById('header-sub').textContent = `${DATA.stores.length} lojas · ${DATA.semanas.length} semanas · última: ${DATA.last_week_label}`;
+  buildRegionalChips();
+  renderAll();
+}
+
+init();
+</script>
+</body>
+</html>
